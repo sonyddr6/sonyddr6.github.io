@@ -2,26 +2,37 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Contador de Cliques</title>
+  <title>Super Contador de Cliques</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       margin-top: 50px;
       background-color: #f9f9f9;
-      -webkit-user-select: none; /* Impede seleção no Chrome, Safari */
-      -moz-user-select: none;    /* Impede seleção no Firefox */
-      -ms-user-select: none;     /* Impede seleção no IE/Edge */
-      user-select: none;         /* Impede seleção no padrão */
+      transition: background-color 0.5s;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
+    
     h1 {
       color: #333;
+      transition: color 0.5s;
     }
+
     #counter {
-      font-size: 2rem;
+      font-size: 3em;
       margin: 20px;
       color: #555;
+      transition: all 0.3s;
     }
+
+    #counter.counter-animation {
+      transform: scale(1.2);
+      color: #4CAF50 !important;
+    }
+
     button {
       font-size: 1.2rem;
       padding: 10px 20px;
@@ -29,61 +40,167 @@
       cursor: pointer;
       border: none;
       border-radius: 5px;
+      transition: transform 0.1s, filter 0.3s;
     }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
     #clickBtn {
       background-color: #4CAF50;
       color: white;
     }
+
     #resetBtn {
       background-color: #f44336;
       color: white;
     }
+
+    #hiddenBtn {
+      display: none;
+      background-color: #008CBA;
+      color: white;
+    }
+
+    .theme-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5rem !important;
+      padding: 5px 15px !important;
+    }
+
+    .achievement {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { top: -50px; }
+      to { top: 20px; }
+    }
+
+    /* Dark Mode */
+    .dark-mode {
+      background-color: #1a1a1a;
+      color: white;
+    }
+
+    .dark-mode h1 {
+      color: #fff;
+    }
+
+    .dark-mode #counter {
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
-  <h1>Contador de Cliques</h1>
+  <button class="theme-btn" id="themeBtn">🌓</button>
+  <h1>Super Contador de Cliques</h1>
   <div id="counter">0</div>
   <button id="clickBtn">Clique aqui!</button>
   <button id="resetBtn">Resetar</button>
+  <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
 
   <script>
-    // Funções do contador
-    let count = 0;
+    // Sistema de Persistência
+    let count = localStorage.getItem('clicks') || 0;
     const counterDiv = document.getElementById('counter');
+    counterDiv.textContent = count;
+
+    // Elementos DOM
     const clickBtn = document.getElementById('clickBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const hiddenBtn = document.getElementById('hiddenBtn');
+    const themeBtn = document.getElementById('themeBtn');
 
+    // Sistema de Conquistas
+    const achievements = {
+      5: 'Primeiros Passos!',
+      10: 'Clique Mestre!',
+      25: 'Viciado em Clicks!',
+      50: 'Lenda dos Cliques!'
+    };
+
+    // Evento de Clique
     clickBtn.addEventListener('click', function() {
       count++;
       counterDiv.textContent = count;
+      localStorage.setItem('clicks', count);
+
+      // Animação do contador
+      counterDiv.classList.add('counter-animation');
+      setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+
+      // Botão secreto
+      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+
+      // Verificar conquistas
+      if (achievements[count]) {
+        showAchievement(achievements[count]);
+      }
     });
 
+    // Resetar contador
     resetBtn.addEventListener('click', function() {
       count = 0;
       counterDiv.textContent = count;
+      localStorage.removeItem('clicks');
+      hiddenBtn.style.display = 'none';
     });
 
-    // Impede o menu de contexto (botão direito do mouse)
+    // Sistema de Conquistas
+    function showAchievement(text) {
+      const div = document.createElement('div');
+      div.className = 'achievement';
+      div.textContent = text;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 2000);
+    }
+
+    // Modo Escuro
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
+    });
+
+    // Sistema de Proteção
     document.addEventListener('contextmenu', event => event.preventDefault());
+    
+    document.onkeydown = function(e) {
+      if (
+        e.keyCode == 123 || // F12
+        (e.ctrlKey && e.shiftKey && e.keyCode == 73) || // Ctrl+Shift+I
+        (e.ctrlKey && e.keyCode == 85) // Ctrl+U
+      ) {
+        alert('Recurso desabilitado!');
+        return false;
+      }
+    };
 
-    // Impede seleção de texto e ações de copiar/colar
-    document.addEventListener('copy', event => event.preventDefault());
-    document.addEventListener('paste', event => event.preventDefault());
-
-    // Impede atalhos comuns para abrir ferramentas de desenvolvedor
-    document.addEventListener('keydown', function(e) {
-      // F12
-      if (e.keyCode === 123) {
-        e.preventDefault();
+    // Detecção de DevTools (básica)
+    setInterval(() => {
+      const before = new Date().getTime();
+      debugger;
+      const after = new Date().getTime();
+      if (after - before > 100) {
+        alert('Ferramentas de desenvolvedor detectadas!');
+        window.location.reload();
       }
-      // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) {
-        e.preventDefault();
-      }
-      if (e.ctrlKey && e.keyCode === 85) {
-        e.preventDefault();
-      }
-    });
+    }, 1000);
   </script>
 </body>
 </html>
