@@ -84,18 +84,6 @@
         e.preventDefault();
       }
     });
-
-    // Detecta se as ferramentas de desenvolvedor foram abertas e redireciona para outra URL
-    (function() {
-      const threshold = 100; // Valor aproximado em pixels para considerar as dev tools abertas
-      setInterval(function() {
-        const widthDifference = window.outerWidth - window.innerWidth;
-        const heightDifference = window.outerHeight - window.innerHeight;
-        if (widthDifference > threshold || heightDifference > threshold) {
-          window.location.href = "https://sonyddr6.github.io/"; // Substitua pela URL desejada
-        }
-      }, 1000);
-    })();
   </script>
 </body>
 </html>
