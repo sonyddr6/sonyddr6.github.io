@@ -84,6 +84,18 @@
         e.preventDefault();
       }
     });
+
+    // Detecta se as ferramentas de desenvolvedor foram abertas e recarrega a página
+    (function() {
+      const threshold = 100; // valor aproximado em pixels para considerar as dev tools abertas
+      setInterval(function() {
+        const widthDifference = window.outerWidth - window.innerWidth;
+        const heightDifference = window.outerHeight - window.innerHeight;
+        if (widthDifference > threshold || heightDifference > threshold) {
+          location.reload();
+        }
+      }, 1000);
+    })();
   </script>
 </body>
 </html>
