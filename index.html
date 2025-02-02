@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Contador de Cliques</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9f9f9;
+      -webkit-user-select: none; /* Impede seleção no Chrome, Safari */
+      -moz-user-select: none;    /* Impede seleção no Firefox */
+      -ms-user-select: none;     /* Impede seleção no IE/Edge */
+      user-select: none;         /* Impede seleção no padrão */
+    }
+    h1 {
+      color: #333;
+    }
+    #counter {
+      font-size: 2rem;
+      margin: 20px;
+      color: #555;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    #clickBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #resetBtn {
+      background-color: #f44336;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Contador de Cliques</h1>
+  <div id="counter">0</div>
+  <button id="clickBtn">Clique aqui!</button>
+  <button id="resetBtn">Resetar</button>
+
+  <script>
+    // Funções do contador
+    let count = 0;
+    const counterDiv = document.getElementById('counter');
+    const clickBtn = document.getElementById('clickBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    clickBtn.addEventListener('click', function() {
+      count++;
+      counterDiv.textContent = count;
+    });
+
+    resetBtn.addEventListener('click', function() {
+      count = 0;
+      counterDiv.textContent = count;
+    });
+
+    // Impede o menu de contexto (botão direito do mouse)
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Impede seleção de texto e ações de copiar/colar
+    document.addEventListener('copy', event => event.preventDefault());
+    document.addEventListener('paste', event => event.preventDefault());
+
+    // Impede atalhos comuns para abrir ferramentas de desenvolvedor
+    document.addEventListener('keydown', function(e) {
+      // F12
+      if (e.keyCode === 123) {
+        e.preventDefault();
+      }
+      // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) {
+        e.preventDefault();
+      }
+      if (e.ctrlKey && e.keyCode === 85) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
