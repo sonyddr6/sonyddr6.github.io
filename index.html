@@ -7,6 +7,7 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
   <style>
     :root {
@@ -138,6 +139,40 @@
       z-index: 1000;
     }
 
+    .username-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1001;
+      text-align: center;
+      display: none;
+    }
+
+    .username-input {
+      padding: 10px;
+      margin: 10px 0;
+      width: 80%;
+      border: 2px solid #4CAF50;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+    }
+
     @keyframes slideDown {
       from { top: -50px; }
       to { top: 20px; }
@@ -211,6 +246,13 @@
     <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
   </div>
 
+  <div class="overlay" id="overlay"></div>
+  <div class="username-modal" id="usernameModal">
+    <h2>Bem-vindo! 👋</h2>
+    <input type="text" class="username-input" id="usernameInput" placeholder="Digite seu nome" maxlength="20">
+    <button onclick="saveUsername()" style="margin-top: 10px;">Salvar</button>
+  </div>
+
   <script>
     // Configuração do Firebase
     // Substitua SUA_API_KEY e outros valores pelas credenciais do SEU projeto
@@ -235,47 +277,56 @@ const firebaseConfig = {
     // Variáveis globais
     let count = 0;
     let currentUserRef = null;
+    let currentUser = null;
 
     // Elementos DOM
     const counterDiv = document.getElementById('counter');
 
     // Função de inicialização do usuário
     function initUserPresence() {
-      // Cria uma nova entrada para o usuário
-      currentUserRef = usersRef.push();
-      
-      // Dados iniciais do usuário
-      const userData = {
-        id: Date.now(),
-        lastActive: firebase.database.ServerValue.TIMESTAMP,
-        device: navigator.userAgentData?.mobile ? 'Mobile' : 'Desktop',
-        clicks: 0
-      };
-
-      // Atualiza os dados do usuário
-      currentUserRef.set(userData);
-
-      // Atualiza o último acesso a cada 30 segundos
-      const presenceInterval = setInterval(() => {
-        currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
-      }, 30000);
-
-      // Remove o usuário ao desconectar
-      currentUserRef.onDisconnect().remove();
-
-      // Ouvir mudanças na lista de usuários
-      usersRef.on('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        const onlineCount = Object.keys(users).length;
-        document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
-        
-        // Atualizar contagem total de cliques
-        let totalClicks = 0;
-        Object.values(users).forEach(user => {
-          totalClicks += user.clicks || 0;
+      // Autenticação anônima
+      firebase.auth().signInAnonymously()
+        .then(() => {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              currentUser = user;
+              checkUsername();
+              setupUserPresence();
+            }
+          });
         });
-        console.log('Total de cliques de todos usuários:', totalClicks);
+    }
+
+    function checkUsername() {
+      const userRef = database.ref('users/' + currentUser.uid);
+      
+      userRef.once('value').then((snapshot) => {
+        if (!snapshot.exists() || !snapshot.val().username) {
+          showUsernameModal();
+        }
       });
+    }
+
+    function showUsernameModal() {
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('usernameModal').style.display = 'block';
+    }
+
+    function saveUsername() {
+      const username = document.getElementById('usernameInput').value.trim();
+      if (username.length < 3 || username.length > 20) {
+        alert('Nome deve ter entre 3 e 20 caracteres!');
+        return;
+      }
+
+      const userRef = database.ref('users/' + currentUser.uid);
+      userRef.update({
+        username: username,
+        created: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('usernameModal').style.display = 'none';
     }
 
     // Função de clique atualizada
@@ -363,6 +414,22 @@ const firebaseConfig = {
       count = snapshot.val() || 0;
       counterDiv.textContent = count;
       hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+    });
+
+    // Modifique a exibição de usuários online:
+    usersRef.on('value', (snapshot) => {
+      const users = snapshot.val() || {};
+      const onlineUsers = Object.values(users)
+        .filter(user => user.lastActive > Date.now() - 30000)
+        .map(user => ({
+          name: user.username || 'Anônimo',
+          clicks: user.clicks || 0
+        }));
+
+      document.getElementById('onlineUsers').innerHTML = `
+        Online: ${onlineUsers.length}<br>
+        ${onlineUsers.map(u => `${u.name}: ${u.clicks}`).join('<br>')}
+      `;
     });
 
     initUserPresence();
