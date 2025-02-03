@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Super Contador Mobile</title>
-  
+
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
@@ -162,26 +162,26 @@
         justify-content: flex-start;
         padding-top: 30px;
       }
-      
+
       .buttons-container {
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
         max-width: 90%;
       }
-      
+
       button {
         width: 45%;
         max-width: 200px;
         font-size: min(4vw, 18px);
         padding: 12px;
       }
-      
+
       #counter {
         font-size: min(12vw, 70px);
         margin: 30px 0;
       }
-      
+
       h1 {
         font-size: min(5vw, 22px);
       }
@@ -192,7 +192,7 @@
         flex-direction: row;
         gap: 20px;
       }
-      
+
       button {
         width: auto;
         padding: 20px 30px;
@@ -237,7 +237,7 @@
     function initUserPresence() {
       // Cria uma nova entrada para o usuário
       currentUserRef = usersRef.push();
-      
+
       const userData = {
         id: Date.now(),
         lastActive: firebase.database.ServerValue.TIMESTAMP,
@@ -257,7 +257,7 @@
         const users = snapshot.val() || {};
         const onlineCount = Object.keys(users).length;
         document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
-        
+
         let totalClicks = 0;
         Object.values(users).forEach(user => {
           totalClicks += user.clicks || 0;
@@ -265,7 +265,25 @@
         console.log('Total de cliques de todos usuários:', totalClicks);
       });
     }
+    // Sistema de conquistas
+    const achievements = {
+      5: "🎉 Primeiros Passos! 5 cliques!",
+      10: "🚀 Dez Maravilhas!",
+      25: "🔥 Vinte e Cinco!",
+      50: "💎 Cinquenta Cliques!",
+      100: "🏆 Centenário Mestre!",
+      500: "👑 Rei dos Cliques!",
+      1000: "🦄 Clique Lendário!"
+    };
 
+    // Função para mostrar conquistas
+    function showAchievement(text) {
+      const div = document.createElement('div');
+      div.className = 'achievement';
+      div.textContent = text;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 2000);
+    }
     function handleClick() {
       count++;
 
@@ -315,7 +333,7 @@
     });
 
     document.addEventListener('contextmenu', event => event.preventDefault());
-    
+
     document.onkeydown = function(e) {
       if (
         e.keyCode == 123 || 
@@ -342,10 +360,10 @@
     // Função de clique atualizada
 function handleClick() {
   count++;
-  
+
   // Atualiza o número total de cliques de todos os usuários (isso pode ser ajustado de acordo com o que você quer, talvez não precise atualizar isso diretamente)
   clicksRef.set(count);
-  
+
   // Atualiza os cliques do usuário individual
   if (currentUserRef) {
     currentUserRef.transaction((user) => {
