@@ -3,82 +3,123 @@
 <head>
     <title>Bate-Papo em Tempo Real</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            color: #333;
         }
 
         #chat-container {
             width: 400px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: 500px; /* Altura fixa */
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            padding: 10px;
         }
 
         #chat-header {
-            background-color: #007bff;
+            background: linear-gradient(90deg, #007bff, #0056b3);
             color: #fff;
-            padding: 10px;
+            padding: 15px;
             text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
         }
 
         #messages {
-            padding: 10px;
-            height: 300px;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
+            flex: 1;
+            height: 100%;
+            padding: 15px;
+            overflow-y: auto; /* Habilita a rolagem */
+            background: #f4f4f4;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
         }
 
         .message {
             margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 8px;
-            background-color: #eee;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 0.9em;
         }
 
         .message.user {
-            background-color: #dcf8c6;
+            background: #dcf8c6;
+            align-self: flex-end;
+            text-align: right;
         }
 
-        #input-area, #username-area {
+        .message.other {
+            background: #ffffff;
+            align-self: flex-start;
+            border: 1px solid #ddd;
+        }
+
+        #username-area, #input-area {
             display: flex;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
             gap: 10px;
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.9em;
         }
 
         button {
-            padding: 8px;
-            background-color: #007bff;
-            color: white;
+            padding: 10px 15px;
             border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
             cursor: pointer;
-            border-radius: 4px;
+            transition: 0.3s;
+            font-weight: 600;
         }
 
         button:hover {
-            background-color: #0056b3;
+            opacity: 0.8;
+        }
+
+        #enter-chat {
+            background: #007bff;
+            color: white;
+        }
+
+        #send-button {
+            background: #28a745;
+            color: white;
+        }
+
+        #clear-button {
+            background: #dc3545;
+            color: white;
+            width: 100%;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">
-            <h2>Bate-Papo em Tempo Real</h2>
-        </div>
+        <div id="chat-header">&#128172; Bate-Papo em Tempo Real</div>
 
-        <!-- Área para inserir o nome de usuário -->
         <div id="username-area">
             <input type="text" id="username-input" placeholder="Digite seu nome...">
             <button id="enter-chat">Entrar</button>
@@ -91,7 +132,7 @@
             <button id="send-button">Enviar</button>
         </div>
 
-        <button id="clear-button">Apagar Todas as Mensagens</button>
+        <button id="clear-button">&#128465; Apagar Todas as Mensagens</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -142,11 +183,18 @@
         function displayMessage(message) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
+
             if (message.user === nomeUsuario) {
                 messageDiv.classList.add('user');
+            } else {
+                messageDiv.classList.add('other');
             }
+
             messageDiv.textContent = `${message.user}: ${message.text}`;
             messagesDiv.appendChild(messageDiv);
+
+            // Rola automaticamente para a última mensagem
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         db.ref('messages').on('child_added', (snapshot) => {
