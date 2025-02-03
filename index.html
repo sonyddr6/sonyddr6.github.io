@@ -339,6 +339,35 @@
     });
 
     initUserPresence();
+    // Função de clique atualizada
+function handleClick() {
+  count++;
+  
+  // Atualiza o número total de cliques de todos os usuários (isso pode ser ajustado de acordo com o que você quer, talvez não precise atualizar isso diretamente)
+  clicksRef.set(count);
+  
+  // Atualiza os cliques do usuário individual
+  if (currentUserRef) {
+    currentUserRef.transaction((user) => {
+      if (user) {
+        user.clicks = (user.clicks || 0) + 1;  // Incrementa o clique do usuário
+        user.lastActive = firebase.database.ServerValue.TIMESTAMP;  // Atualiza o timestamp de atividade
+      }
+      return user;
+    });
+  }
+
+  counterDiv.textContent = count;
+  counterDiv.classList.add('counter-animation');
+  setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+  hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+
+  // Verifica e mostra conquistas
+  if (achievements[count]) {
+    showAchievement(achievements[count]);
+  }
+}
+
   </script>
 </body>
 </html>
