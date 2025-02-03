@@ -1,304 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Super Contador Mobile</title>
-  
-  
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-  
+  <!-- Mantenha o head existente -->
+  <!-- Adicione este estilo novo -->
   <style>
-    :root {
-      --button-size: min(8vw, 50px);
-      --counter-size: min(15vw, 80px);
-      --primary-color: #4CAF50;
-      --secondary-color: #f44336;
-      --accent-color: #008CBA;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #f9f9f9;
-      transition: background-color 0.5s;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    h1 {
-      color: #333;
-      font-size: min(6vw, 24px);
-      margin: 10px 0;
-      text-align: center;
-      transition: color 0.5s;
-    }
-
-    #counter {
-      font-size: var(--counter-size);
-      margin: 20px 0;
-      color: #555;
-      transition: all 0.3s;
-      font-weight: bold;
-    }
-
-    #counter.counter-animation {
-      transform: scale(1.2);
-      color: var(--primary-color) !important;
-    }
-
-    .buttons-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-    }
-
-    button {
-      font-size: min(5vw, 20px);
-      padding: 15px;
-      margin: 0;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-      max-width: 300px;
-      min-height: var(--button-size);
-      touch-action: manipulation;
-    }
-
-    button:active {
-      transform: scale(0.95);
-    }
-
-    button:hover {
-      filter: brightness(1.1);
-    }
-
-    #clickBtn {
-      background-color: var(--primary-color);
-      color: white;
-    }
-
-    #resetBtn {
-      background-color: var(--secondary-color);
-      color: white;
-    }
-
-    #hiddenBtn {
-      background-color: var(--accent-color);
-      color: white;
-      display: none;
-    }
-
-    .theme-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      font-size: 24px;
-      padding: 0;
-      background-color: #666;
-      z-index: 1000;
-    }
-
-    .achievement {
+    .online-users {
       position: fixed;
       top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary-color);
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 10px 20px;
-      border-radius: 25px;
-      animation: slideDown 0.5s ease-out;
-      font-size: min(4vw, 16px);
-    }
-
-    @keyframes slideDown {
-      from { top: -50px; }
-      to { top: 20px; }
-    }
-
-    .dark-mode {
-      background-color: #1a1a1a;
-      color: white;
-    }
-
-    .dark-mode h1 {
-      color: #fff;
-    }
-
-    .dark-mode #counter {
-      color: #ccc;
-    }
-
-    @media (orientation: landscape) {
-      body {
-        justify-content: flex-start;
-        padding-top: 30px;
-      }
-      
-      .buttons-container {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        max-width: 90%;
-      }
-      
-      button {
-        width: 45%;
-        max-width: 200px;
-        font-size: min(4vw, 18px);
-        padding: 12px;
-      }
-      
-      #counter {
-        font-size: min(12vw, 70px);
-        margin: 30px 0;
-      }
-      
-      h1 {
-        font-size: min(5vw, 22px);
-      }
-    }
-
-    @media (min-width: 768px) {
-      .buttons-container {
-        flex-direction: row;
-        gap: 20px;
-      }
-      
-      button {
-        width: auto;
-        padding: 20px 30px;
-        font-size: 18px;
-      }
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
-  <button class="theme-btn" id="themeBtn">🌓</button>
-  <h1>Super Contador Mobile</h1>
-  <div id="counter">0</div>
-  <div class="buttons-container">
-    <button id="clickBtn">Clique aqui!</button>
-    <button id="resetBtn">Resetar</button>
-    <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
-  </div>
+  <div class="online-users" id="onlineUsers">Usuários Online: 0</div>
+  <!-- Mantenha o restante do body original -->
 
   <script>
-// Configuração do Firebase
-const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO.firebaseio.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
-};
+    // Configuração do Firebase (substitua com suas credenciais)
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_PROJETO.firebaseapp.com",
+      databaseURL: "https://SEU_PROJETO.firebaseio.com",
+      projectId: "SEU_PROJETO",
+      storageBucket: "SEU_PROJETO.appspot.com",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
 
-// Inicialize o Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+    // Inicialize o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-// Referência ao banco de dados
-const clicksRef = database.ref('clicks');
+    // Referências do Banco de Dados
+    const clicksRef = database.ref('clicks');
+    const usersRef = database.ref('users');
 
-// Elementos DOM
-const counterDiv = document.getElementById('counter');
-let count = 0;
+    // Variáveis globais
+    let count = 0;
+    let currentUserRef = null;
 
-// Ouvir atualizações do banco de dados
-clicksRef.on('value', (snapshot) => {
-  count = snapshot.val() || 0;
-  counterDiv.textContent = count;
-  updateUI();
-});
+    // Função de inicialização do usuário
+    function initUserPresence() {
+      // Cria uma nova entrada para o usuário
+      currentUserRef = usersRef.push();
+      
+      // Dados iniciais do usuário
+      const userData = {
+        id: Date.now(),
+        lastActive: firebase.database.ServerValue.TIMESTAMP,
+        device: navigator.userAgentData?.mobile ? 'Mobile' : 'Desktop',
+        clicks: 0
+      };
 
-// Função de clique atualizada
-function handleClick() {
-  count++;
-  clicksRef.set(count)
-    .then(() => {
+      // Atualiza os dados do usuário
+      currentUserRef.set(userData);
+
+      // Atualiza o último acesso a cada 30 segundos
+      const presenceInterval = setInterval(() => {
+        currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
+      }, 30000);
+
+      // Remove o usuário ao desconectar
+      currentUserRef.onDisconnect().remove();
+
+      // Ouvir mudanças na lista de usuários
+      usersRef.on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const onlineCount = Object.keys(users).length;
+        document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
+        
+        // Atualizar contagem total de cliques
+        let totalClicks = 0;
+        Object.values(users).forEach(user => {
+          totalClicks += user.clicks || 0;
+        });
+        console.log('Total de cliques de todos usuários:', totalClicks);
+      });
+    }
+
+    // Função de clique atualizada
+    function handleClick() {
+      count++;
+      
+      // Atualiza localmente e no Firebase
+      counterDiv.textContent = count;
+      clicksRef.set(count);
+      
+      // Atualiza os cliques do usuário
+      currentUserRef.transaction((user) => {
+        if (user) {
+          user.clicks = (user.clicks || 0) + 1;
+          user.lastActive = firebase.database.ServerValue.TIMESTAMP;
+        }
+        return user;
+      });
+
+      // Restante da função mantido
       counterDiv.classList.add('counter-animation');
       setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
-    });
-}
-
-// Restante do código mantido (reset, conquistas, tema, etc.)
-// ... (mantenha todas as outras funções como antes)
- // hiddenBtn.style.display = localStorage.getItem('clicks') >= 500 ? 'inline-block' : 'none'; // sem uso ate momento primeiro comantario 
-
-      // Conquistas
+      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+      
       if (achievements[count]) {
         showAchievement(achievements[count]);
       }
     }
 
-    // Touch/Click
-    clickBtn.addEventListener('click', handleClick);
-    clickBtn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      handleClick();
-    });
-
-    // Reset
+    // Função de reset atualizada
     resetBtn.addEventListener('click', function() {
       count = 0;
+      clicksRef.set(0);
       counterDiv.textContent = count;
       localStorage.removeItem('clicks');
       hiddenBtn.style.display = 'none';
+      
+      // Reseta os cliques do usuário
+      currentUserRef.update({ clicks: 0 });
     });
 
-    // Conquistas
-    function showAchievement(text) {
-      const div = document.createElement('div');
-      div.className = 'achievement';
-      div.textContent = text;
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), 2000);
-    }
-
-    // Modo Escuro
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
+    // Inicialização
+    clicksRef.on('value', (snapshot) => {
+      count = snapshot.val() || 0;
+      counterDiv.textContent = count;
+      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
     });
 
-    // Proteções
-    document.addEventListener('contextmenu', event => event.preventDefault());
-    
-    document.onkeydown = function(e) {
-      if (
-        e.keyCode == 123 || 
-        (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||
-        (e.ctrlKey && e.keyCode == 85)
-      ) {
-        alert('Recurso desabilitado!');
-        return false;
-      }
-    };
+    initUserPresence();
 
-    // Detecção Mobile
-    if ('ontouchstart' in window) {
-      document.body.classList.add('touch-device');
-      document.documentElement.style.setProperty('--button-size', '60px');
-    }
+    // Mantenha o restante do código original
   </script>
 </body>
 </html>
