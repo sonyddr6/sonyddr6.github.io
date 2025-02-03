@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Super Contador Mobile</title>
+  
+  
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+  
   <style>
     :root {
       --button-size: min(8vw, 50px);
@@ -195,49 +201,48 @@
   </div>
 
   <script>
-    // Persistência de Dados
-    let count = localStorage.getItem('clicks') || 0;
-    const counterDiv = document.getElementById('counter');
-    counterDiv.textContent = count;
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO.firebaseio.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
 
-    // Elementos DOM
-    const clickBtn = document.getElementById('clickBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const hiddenBtn = document.getElementById('hiddenBtn');
-    const themeBtn = document.getElementById('themeBtn');
+// Inicialize o Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-    // Conquistas
-    const achievements = {
-      5: 'Primeiros Passos!',
-      10: 'Clique Mestre!',
-      25: 'Viciado em Clicks!',
-      50: 'Lenda dos Cliques!'
-    };
+// Referência ao banco de dados
+const clicksRef = database.ref('clicks');
 
-    // Evento de Clique
-    function handleClick() {
-      count++;
-      counterDiv.textContent = count;
-      localStorage.setItem('clicks', count);
+// Elementos DOM
+const counterDiv = document.getElementById('counter');
+let count = 0;
 
-      // Animação
+// Ouvir atualizações do banco de dados
+clicksRef.on('value', (snapshot) => {
+  count = snapshot.val() || 0;
+  counterDiv.textContent = count;
+  updateUI();
+});
+
+// Função de clique atualizada
+function handleClick() {
+  count++;
+  clicksRef.set(count)
+    .then(() => {
       counterDiv.classList.add('counter-animation');
       setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+    });
+}
 
-      // Botão secreto
-      // Modifique a parte do botão secreto para:
-const hiddenBtn = document.getElementById('hiddenBtn');
-
-// Atualizar visibilidade do botão secreto
-hiddenBtn.style.display = localStorage.getItem('clicks') >= 5 ? 'inline-block' : 'none';
-
-// Alterar o evento de clique do botão secreto
-hiddenBtn.addEventListener('click', function() {
-  // Salvar a contagem atual antes de navegar
-  localStorage.setItem('clicks', count);
-  window.location.href = 'subpage.html';
-});
-     // hiddenBtn.style.display = localStorage.getItem('clicks') >= 500 ? 'inline-block' : 'none'; // sem uso ate momento primeiro comantario 
+// Restante do código mantido (reset, conquistas, tema, etc.)
+// ... (mantenha todas as outras funções como antes)
+ // hiddenBtn.style.display = localStorage.getItem('clicks') >= 500 ? 'inline-block' : 'none'; // sem uso ate momento primeiro comantario 
 
       // Conquistas
       if (achievements[count]) {
