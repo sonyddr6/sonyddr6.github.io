@@ -1,1 +1,132 @@
-subpage.html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Contador Multiplayer</title>
+  <!-- Adicione o SDK do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <style>
+    /* Mantenha os estilos anteriores e adicione: */
+    .stats-container {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .online-users {
+      margin-bottom: 5px;
+    }
+
+    .total-clicks {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="stats-container">
+    <div class="online-users">Online: <span id="onlineCount">0</span></div>
+    <div class="total-clicks">Total de Cliques: <span id="totalClicks">0</span></div>
+  </div>
+  <!-- Mantenha o resto do HTML anterior -->
+
+<script>
+  // Configuração do Firebase (substitua com suas credenciais)
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SEU_APP_ID"
+  };
+
+  // Inicialize o Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  const auth = firebase.auth();
+
+  let userId = null;
+  let userRef = null;
+  
+  // Autenticação anônima
+  auth.signInAnonymously()
+    .then(() => {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          userId = user.uid;
+          setupUserPresence();
+        }
+      });
+    });
+
+  function setupUserPresence() {
+    // Referência do usuário no banco de dados
+    userRef = database.ref('users/' + userId);
+    
+    // Atualizar presença do usuário
+    userRef.set({
+      online: true,
+      clickCount: 0,
+      lastActive: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    // Quando desconectar, remover presença
+    userRef.onDisconnect().remove();
+    
+    // Ouvir mudanças nos cliques
+    userRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        counterDiv.textContent = data.clickCount || 0;
+      }
+    });
+  }
+
+  // Atualizar estatísticas globais
+  database.ref('users').on('value', (snapshot) => {
+    const users = snapshot.val() || {};
+    const onlineUsers = Object.keys(users).length;
+    document.getElementById('onlineCount').textContent = onlineUsers;
+
+    let total = 0;
+    Object.values(users).forEach(user => {
+      total += user.clickCount || 0;
+    });
+    document.getElementById('totalClicks').textContent = total;
+  });
+
+  // Modificar a função handleClick
+  function handleClick() {
+    userRef.transaction((user) => {
+      if (user) {
+        user.clickCount = (user.clickCount || 0) + 1;
+      }
+      return user;
+    });
+
+    counterDiv.classList.add('counter-animation');
+    setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+
+    if (count >= 5) {
+      hiddenBtn.style.display = 'inline-block';
+    }
+  }
+
+  // Modificar a função de reset
+  resetBtn.addEventListener('click', () => {
+    userRef.update({ clickCount: 0 });
+  });
+
+  // Restante do código mantido...
+</script>
+</body>
+</html>
