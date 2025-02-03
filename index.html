@@ -2,45 +2,74 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Super Contador de Cliques</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Contador Mobile</title>
   <style>
+    :root {
+      --button-size: min(8vw, 50px);
+      --counter-size: min(15vw, 80px);
+      --primary-color: #4CAF50;
+      --secondary-color: #f44336;
+      --accent-color: #008CBA;
+    }
+
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       background-color: #f9f9f9;
       transition: background-color 0.5s;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
-    
+
     h1 {
       color: #333;
+      font-size: min(6vw, 24px);
+      margin: 10px 0;
+      text-align: center;
       transition: color 0.5s;
     }
 
     #counter {
-      font-size: 3em;
-      margin: 20px;
+      font-size: var(--counter-size);
+      margin: 20px 0;
       color: #555;
       transition: all 0.3s;
+      font-weight: bold;
     }
 
     #counter.counter-animation {
       transform: scale(1.2);
-      color: #4CAF50 !important;
+      color: var(--primary-color) !important;
+    }
+
+    .buttons-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
     }
 
     button {
-      font-size: 1.2rem;
-      padding: 10px 20px;
-      margin: 10px;
-      cursor: pointer;
+      font-size: min(5vw, 20px);
+      padding: 15px;
+      margin: 0;
       border: none;
-      border-radius: 5px;
-      transition: transform 0.1s, filter 0.3s;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      max-width: 300px;
+      min-height: var(--button-size);
+      touch-action: manipulation;
     }
 
     button:active {
@@ -52,27 +81,32 @@
     }
 
     #clickBtn {
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: white;
     }
 
     #resetBtn {
-      background-color: #f44336;
+      background-color: var(--secondary-color);
       color: white;
     }
 
     #hiddenBtn {
-      display: none;
-      background-color: #008CBA;
+      background-color: var(--accent-color);
       color: white;
+      display: none;
     }
 
     .theme-btn {
-      position: absolute;
-      top: 20px;
+      position: fixed;
+      bottom: 20px;
       right: 20px;
-      font-size: 1.5rem !important;
-      padding: 5px 15px !important;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 24px;
+      padding: 0;
+      background-color: #666;
+      z-index: 1000;
     }
 
     .achievement {
@@ -80,11 +114,12 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #4CAF50;
+      background: var(--primary-color);
       color: white;
       padding: 10px 20px;
       border-radius: 25px;
       animation: slideDown 0.5s ease-out;
+      font-size: min(4vw, 16px);
     }
 
     @keyframes slideDown {
@@ -92,7 +127,6 @@
       to { top: 20px; }
     }
 
-    /* Dark Mode */
     .dark-mode {
       background-color: #1a1a1a;
       color: white;
@@ -105,18 +139,63 @@
     .dark-mode #counter {
       color: #ccc;
     }
+
+    @media (orientation: landscape) {
+      body {
+        justify-content: flex-start;
+        padding-top: 30px;
+      }
+      
+      .buttons-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 90%;
+      }
+      
+      button {
+        width: 45%;
+        max-width: 200px;
+        font-size: min(4vw, 18px);
+        padding: 12px;
+      }
+      
+      #counter {
+        font-size: min(12vw, 70px);
+        margin: 30px 0;
+      }
+      
+      h1 {
+        font-size: min(5vw, 22px);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .buttons-container {
+        flex-direction: row;
+        gap: 20px;
+      }
+      
+      button {
+        width: auto;
+        padding: 20px 30px;
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 <body>
   <button class="theme-btn" id="themeBtn">🌓</button>
-  <h1>Super Contador de Cliques</h1>
+  <h1>Super Contador Mobile</h1>
   <div id="counter">0</div>
-  <button id="clickBtn">Clique aqui!</button>
-  <button id="resetBtn">Resetar</button>
-  <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
+  <div class="buttons-container">
+    <button id="clickBtn">Clique aqui!</button>
+    <button id="resetBtn">Resetar</button>
+    <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
+  </div>
 
   <script>
-    // Sistema de Persistência
+    // Persistência de Dados
     let count = localStorage.getItem('clicks') || 0;
     const counterDiv = document.getElementById('counter');
     counterDiv.textContent = count;
@@ -127,7 +206,7 @@
     const hiddenBtn = document.getElementById('hiddenBtn');
     const themeBtn = document.getElementById('themeBtn');
 
-    // Sistema de Conquistas
+    // Conquistas
     const achievements = {
       5: 'Primeiros Passos!',
       10: 'Clique Mestre!',
@@ -136,25 +215,32 @@
     };
 
     // Evento de Clique
-    clickBtn.addEventListener('click', function() {
+    function handleClick() {
       count++;
       counterDiv.textContent = count;
       localStorage.setItem('clicks', count);
 
-      // Animação do contador
+      // Animação
       counterDiv.classList.add('counter-animation');
       setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
 
       // Botão secreto
       hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
 
-      // Verificar conquistas
+      // Conquistas
       if (achievements[count]) {
         showAchievement(achievements[count]);
       }
+    }
+
+    // Touch/Click
+    clickBtn.addEventListener('click', handleClick);
+    clickBtn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      handleClick();
     });
 
-    // Resetar contador
+    // Reset
     resetBtn.addEventListener('click', function() {
       count = 0;
       counterDiv.textContent = count;
@@ -162,7 +248,7 @@
       hiddenBtn.style.display = 'none';
     });
 
-    // Sistema de Conquistas
+    // Conquistas
     function showAchievement(text) {
       const div = document.createElement('div');
       div.className = 'achievement';
@@ -177,30 +263,25 @@
       themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
     });
 
-    // Sistema de Proteção
+    // Proteções
     document.addEventListener('contextmenu', event => event.preventDefault());
     
     document.onkeydown = function(e) {
       if (
-        e.keyCode == 123 || // F12
-        (e.ctrlKey && e.shiftKey && e.keyCode == 73) || // Ctrl+Shift+I
-        (e.ctrlKey && e.keyCode == 85) // Ctrl+U
+        e.keyCode == 123 || 
+        (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||
+        (e.ctrlKey && e.keyCode == 85)
       ) {
         alert('Recurso desabilitado!');
         return false;
       }
     };
 
-    // Detecção de DevTools (básica)
-    setInterval(() => {
-      const before = new Date().getTime();
-      debugger;
-      const after = new Date().getTime();
-      if (after - before > 100) {
-        alert('Ferramentas de desenvolvedor detectadas!');
-        window.location.reload();
-      }
-    }, 1000);
+    // Detecção Mobile
+    if ('ontouchstart' in window) {
+      document.body.classList.add('touch-device');
+      document.documentElement.style.setProperty('--button-size', '60px');
+    }
   </script>
 </body>
 </html>
