@@ -2,131 +2,47 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Contador Multiplayer</title>
-  <!-- Adicione o SDK do Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subpágina Secreta</title>
   <style>
-    /* Mantenha os estilos anteriores e adicione: */
-    .stats-container {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    
+    .count-display {
+      font-size: 3em;
+      margin: 50px 0;
+      color: #2c3e50;
+    }
+
+    .back-btn {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      background-color: #3498db;
       color: white;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .online-users {
-      margin-bottom: 5px;
-    }
-
-    .total-clicks {
-      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="stats-container">
-    <div class="online-users">Online: <span id="onlineCount">0</span></div>
-    <div class="total-clicks">Total de Cliques: <span id="totalClicks">0</span></div>
-  </div>
-  <!-- Mantenha o resto do HTML anterior -->
+  <h1>Contagem Secreta</h1>
+  <div class="count-display" id="countDisplay">0</div>
+  <button class="back-btn" onclick="window.history.back()">Voltar</button>
 
-<script>
-  // Configuração do Firebase (substitua com suas credenciais)
-  const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    databaseURL: "https://SEU_PROJETO.firebaseio.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SEU_SENDER_ID",
-    appId: "SEU_APP_ID"
-  };
-
-  // Inicialize o Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-  const auth = firebase.auth();
-
-  let userId = null;
-  let userRef = null;
-  
-  // Autenticação anônima
-  auth.signInAnonymously()
-    .then(() => {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          userId = user.uid;
-          setupUserPresence();
-        }
-      });
-    });
-
-  function setupUserPresence() {
-    // Referência do usuário no banco de dados
-    userRef = database.ref('users/' + userId);
+  <script>
+    // Recupera a contagem do localStorage
+    const savedCount = localStorage.getItem('clickCount') || 0;
     
-    // Atualizar presença do usuário
-    userRef.set({
-      online: true,
-      clickCount: 0,
-      lastActive: firebase.database.ServerValue.TIMESTAMP
-    });
-    
-    // Quando desconectar, remover presença
-    userRef.onDisconnect().remove();
-    
-    // Ouvir mudanças nos cliques
-    userRef.on('value', (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        counterDiv.textContent = data.clickCount || 0;
-      }
-    });
-  }
+    // Exibe na página
+    document.getElementById('countDisplay').textContent = savedCount;
 
-  // Atualizar estatísticas globais
-  database.ref('users').on('value', (snapshot) => {
-    const users = snapshot.val() || {};
-    const onlineUsers = Object.keys(users).length;
-    document.getElementById('onlineCount').textContent = onlineUsers;
-
-    let total = 0;
-    Object.values(users).forEach(user => {
-      total += user.clickCount || 0;
-    });
-    document.getElementById('totalClicks').textContent = total;
-  });
-
-  // Modificar a função handleClick
-  function handleClick() {
-    userRef.transaction((user) => {
-      if (user) {
-        user.clickCount = (user.clickCount || 0) + 1;
-      }
-      return user;
-    });
-
-    counterDiv.classList.add('counter-animation');
-    setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
-
-    if (count >= 5) {
-      hiddenBtn.style.display = 'inline-block';
-    }
-  }
-
-  // Modificar a função de reset
-  resetBtn.addEventListener('click', () => {
-    userRef.update({ clickCount: 0 });
-  });
-
-  // Restante do código mantido...
-</script>
+    // Opcional: Limpar o contador quando visualizado
+    // localStorage.removeItem('clickCount');
+  </script>
 </body>
 </html>
