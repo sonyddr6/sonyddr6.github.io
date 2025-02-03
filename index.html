@@ -1,50 +1,169 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Botão que Desaparece</title>
+    <title>Bate-Papo em Tempo Real</title>
     <style>
-        .container {
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+            min-height: 100vh;
         }
 
-        .botao-magico {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #4CAF50;
+        #chat-container {
+            width: 400px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        #chat-header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #messages {
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            background-color: #eee;
+        }
+
+        .message.user {
+            background-color: #dcf8c6;
+        }
+
+        #input-area, #username-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px;
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 4px;
         }
 
-        .botao-magico:hover {
-            background-color: #45a049;
-            transform: scale(1.1);
-        }
-
-        .fade-out {
-            opacity: 0;
-            transform: scale(0);
-            transition: all 0.5s ease;
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <button id="botaoMagico" class="botao-magico">Clique em Mim!</button>
+    <div id="chat-container">
+        <div id="chat-header">
+            <h2>Bate-Papo em Tempo Real</h2>
+        </div>
+
+        <!-- Área para inserir o nome de usuário -->
+        <div id="username-area">
+            <input type="text" id="username-input" placeholder="Digite seu nome...">
+            <button id="enter-chat">Entrar</button>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="input-area" style="display: none;">
+            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <button id="send-button">Enviar</button>
+        </div>
+
+        <button id="clear-button">Apagar Todas as Mensagens</button>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
     <script>
-        document.getElementById('botaoMagico').addEventListener('click', function() {
-            this.classList.add('fade-out');
-            setTimeout(() => {
-                this.style.display = 'none';
-            }, 500);
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKCSa5ajS4Ffsb9zRoDbGoKdM-v6QgSG8",
+            authDomain: "meuchatapp-f6f2d.firebaseapp.com",
+            projectId: "meuchatapp-f6f2d",
+            storageBucket: "meuchatapp-f6f2d.firebasestorage.app",
+            messagingSenderId: "715047208925",
+            appId: "1:715047208925:web:0087d905ee99e32354d834",
+            measurementId: "G-2D2BPMSYRC"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const clearButton = document.getElementById('clear-button');
+        const enterChatButton = document.getElementById('enter-chat');
+        const usernameInput = document.getElementById('username-input');
+        let nomeUsuario = "";
+
+        enterChatButton.addEventListener('click', () => {
+            nomeUsuario = usernameInput.value.trim();
+            if (nomeUsuario !== "") {
+                document.getElementById('input-area').style.display = 'flex';
+                usernameInput.disabled = true;
+                enterChatButton.disabled = true;
+            }
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message !== '' && nomeUsuario !== "") {
+                db.ref('messages').push({
+                    text: message,
+                    user: nomeUsuario
+                });
+                messageInput.value = '';
+            }
+        }
+
+        function displayMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (message.user === nomeUsuario) {
+                messageDiv.classList.add('user');
+            }
+            messageDiv.textContent = `${message.user}: ${message.text}`;
+            messagesDiv.appendChild(messageDiv);
+        }
+
+        db.ref('messages').on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            displayMessage(message);
+        });
+
+        clearButton.addEventListener('click', () => {
+            db.ref('messages').remove();
+            messagesDiv.innerHTML = "";
+        });
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         });
     </script>
 </body>
