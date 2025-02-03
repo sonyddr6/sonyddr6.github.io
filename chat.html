@@ -1,158 +1,288 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bate-Papo em Tempo Real</title>
+    <title>Bate-Papo em Tempo Real 2.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+      }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
-        }
+      body {
+          font-family: 'Poppins', sans-serif;
+          background: linear-gradient(135deg, #1e3c72, #2a5298);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          padding: 10px;
+      }
 
-        #chat-container {
-            width: 90%;
-            max-width: 600px; /* Máximo para não ficar exagerado em telas muito grandes */
-            height: 80vh; /* Ajusta a altura conforme a tela */
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+      #chat-container {
+          width: 90%;
+          max-width: 600px;
+          height: 80vh;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+      }
 
-        #chat-header {
-            background: linear-gradient(90deg, #007bff, #0056b3);
-            color: #fff;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: 600;
-        }
+      #chat-header {
+          background: linear-gradient(90deg, #007bff, #0056b3);
+          color: #fff;
+          padding: 15px;
+          text-align: center;
+          font-size: 1.2em;
+          font-weight: 600;
+          position: relative;
+      }
 
-        #messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background: #f4f4f4;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-        }
+      #online-users {
+          padding: 10px 15px;
+          background: #e3f2fd;
+          border-bottom: 1px solid #b3e5fc;
+          max-height: 120px;
+          overflow-y: auto;
+      }
 
-        .message {
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            word-wrap: break-word;
-            font-size: 0.9em;
-        }
+      .user-status {
+          display: flex;
+          align-items: center;
+          margin: 5px 0;
+          font-size: 0.9em;
+          color: #37474f;
+      }
 
-        .message.user {
-            background: #dcf8c6;
-            align-self: flex-end;
-            text-align: right;
-        }
+      .online-dot {
+          width: 10px;
+          height: 10px;
+          background: #4caf50;
+          border-radius: 50%;
+          margin-right: 8px;
+          animation: pulse 1.5s infinite;
+      }
 
-        .message.other {
-            background: #ffffff;
-            align-self: flex-start;
-            border: 1px solid #ddd;
-        }
+      @keyframes pulse {
+          0% { transform: scale(0.95); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(0.95); }
+      }
 
-        #username-area, #input-area {
-            display: flex;
-            padding: 10px;
-            background: #fff;
-            border-top: 1px solid #ddd;
-            gap: 10px;
-        }
+      .typing-indicator {
+          font-size: 0.8em;
+          color: #78909c;
+          font-style: italic;
+          padding: 5px 10px;
+          background: #f5f5f5;
+          border-radius: 15px;
+          margin-left: 10px;
+      }
 
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 0.9em;
-        }
+      #messages {
+          flex: 1;
+          padding: 15px;
+          overflow-y: auto;
+          background: #f4f4f4;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+      }
 
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: 600;
-        }
+      .message {
+          margin-bottom: 10px;
+          padding: 12px 15px;
+          border-radius: 15px;
+          max-width: 80%;
+          word-wrap: break-word;
+          font-size: 0.9em;
+          position: relative;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
 
-        button:hover {
-            opacity: 0.8;
-        }
+      .message.user {
+          background: #dcf8c6;
+          align-self: flex-end;
+          border-bottom-right-radius: 5px;
+      }
 
-        #enter-chat {
-            background: #007bff;
-            color: white;
-        }
+      .message.other {
+          background: #ffffff;
+          align-self: flex-start;
+          border-bottom-left-radius: 5px;
+          border: 1px solid #e0e0e0;
+      }
 
-        #send-button {
-            background: #28a745;
-            color: white;
-        }
+      .message-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+          font-size: 0.8em;
+          color: #607d8b;
+      }
 
-        #clear-button {
-            background: #dc3545;
-            color: white;
-            width: 100%;
-            margin-top: 5px;
-        }
+      .message-header span:first-child {
+          font-weight: 600;
+          color: #37474f;
+      }
 
-        /* Responsividade */
-        @media (max-width: 768px) {
-            #chat-container {
-                width: 100%;
-                height: 90vh;
-            }
-        }
-    </style>
+      .message-body {
+          line-height: 1.4;
+          margin-bottom: 4px;
+      }
+
+      .message-actions {
+          text-align: right;
+          margin-top: 8px;
+      }
+
+      .delete-btn {
+          background: none;
+          border: none;
+          color: #e57373;
+          padding: 2px 6px;
+          cursor: pointer;
+          transition: 0.3s;
+          font-size: 0.85em;
+      }
+
+      .delete-btn:hover {
+          color: #d32f2f;
+          transform: scale(1.1);
+      }
+
+      #username-area, #input-area {
+          display: flex;
+          padding: 10px;
+          background: #fff;
+          border-top: 1px solid #ddd;
+          gap: 10px;
+      }
+
+      #typing-indicator {
+          position: absolute;
+          bottom: 60px;
+          left: 20px;
+          font-size: 0.85em;
+          color: #78909c;
+          background: #eceff1;
+          padding: 5px 12px;
+          border-radius: 15px;
+          display: none;
+      }
+
+      input[type="text"] {
+          flex: 1;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          font-size: 0.9em;
+          transition: 0.3s;
+      }
+
+      input[type="text"]:focus {
+          border-color: #007bff;
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+      }
+
+      button {
+          padding: 10px 15px;
+          border: none;
+          border-radius: 8px;
+          font-size: 0.9em;
+          cursor: pointer;
+          transition: 0.3s;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+      }
+
+      #enter-chat {
+          background: #007bff;
+          color: white;
+      }
+
+      #send-button {
+          background: #28a745;
+          color: white;
+      }
+
+      #clear-button {
+          background: #dc3545;
+          color: white;
+          width: 100%;
+          margin-top: 5px;
+          justify-content: center;
+      }
+
+      @media (max-width: 768px) {
+          #chat-container {
+              width: 100%;
+              height: 90vh;
+          }
+
+          .message {
+              max-width: 85%;
+          }
+
+          #online-users {
+              font-size: 0.85em;
+          }
+      }
+
+      /* Efeito de scroll personalizado */
+      ::-webkit-scrollbar {
+          width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+          background: #b0bec5;
+          border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+          background: #78909c;
+      }
+  </style>
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">&#128172; Bate-Papo em Tempo Real</div>
+        <div id="chat-header">&#128172; Chat Avançado (Online: <span id="online-count">0</span>)</div>
+        <div id="online-users"></div>
 
         <div id="username-area">
-            <input type="text" id="username-input" placeholder="Digite seu nome...">
+            <input type="text" id="username-input" placeholder="Digite seu nome..." maxlength="20">
             <button id="enter-chat">Entrar</button>
         </div>
 
         <div id="messages"></div>
-
+        
         <div id="input-area" style="display: none;">
             <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <div id="typing-indicator"></div>
             <button id="send-button">Enviar</button>
         </div>
 
-        <button id="clear-button">&#128465; Apagar Todas as Mensagens</button>
+        <button id="clear-button">&#128465; Limpar Histórico</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
     <script>
+        // Configuração do Firebase (mantida igual)
         const firebaseConfig = {
             apiKey: "AIzaSyBKCSa5ajS4Ffsb9zRoDbGoKdM-v6QgSG8",
             authDomain: "meuchatapp-f6f2d.firebaseapp.com",
@@ -163,77 +293,176 @@
             measurementId: "G-2D2BPMSYRC"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const clearButton = document.getElementById('clear-button');
-        const enterChatButton = document.getElementById('enter-chat');
-        const usernameInput = document.getElementById('username-input');
-        let nomeUsuario = "";
+        // Elementos da UI
+        const elements = {
+            messages: document.getElementById('messages'),
+            messageInput: document.getElementById('message-input'),
+            sendButton: document.getElementById('send-button'),
+            clearButton: document.getElementById('clear-button'),
+            enterChat: document.getElementById('enter-chat'),
+            usernameInput: document.getElementById('username-input'),
+            inputArea: document.getElementById('input-area'),
+            onlineUsers: document.getElementById('online-users'),
+            typingIndicator: document.getElementById('typing-indicator'),
+            onlineCount: document.getElementById('online-count')
+        };
 
-        enterChatButton.addEventListener('click', () => {
-            nomeUsuario = usernameInput.value.trim();
-            if (nomeUsuario !== "") {
-                document.getElementById('input-area').style.display = 'flex';
-                usernameInput.disabled = true;
-                enterChatButton.disabled = true;
-            }
-        });
+        // Estado do usuário
+        let currentUser = {
+            id: '',
+            name: '',
+            isTyping: false,
+            lastTypingTime: 0
+        };
 
-        function sendMessage() {
-            const message = messageInput.value.trim();
-            if (message !== '' && nomeUsuario !== "") {
+        // Gerenciamento de Usuário
+        const initUser = () => {
+            currentUser.id = Math.random().toString(36).substr(2, 9);
+            const userRef = db.ref(`users/${currentUser.id}`);
+            
+            userRef.set({
+                name: currentUser.name,
+                online: true,
+                lastActive: Date.now(),
+                isTyping: false
+            });
+
+            userRef.onDisconnect().update({
+                online: false,
+                lastActive: Date.now()
+            });
+        };
+
+        // Gerenciamento de Mensagens
+        const sendMessage = () => {
+            const messageText = elements.messageInput.value.trim();
+            if (messageText && currentUser.name) {
                 db.ref('messages').push({
-                    text: message,
-                    user: nomeUsuario
+                    text: messageText,
+                    user: currentUser.name,
+                    userId: currentUser.id,
+                    timestamp: Date.now(),
+                    status: 'active'
                 });
-                messageInput.value = '';
+                elements.messageInput.value = '';
             }
-        }
+        };
 
-        function displayMessage(message) {
+        const deleteMessage = (messageId) => {
+            db.ref(`messages/${messageId}`).update({ status: 'deleted' });
+        };
+
+        // Interface
+        const createMessageElement = (message) => {
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
+            messageDiv.className = `message ${message.userId === currentUser.id ? 'user' : 'other'}`;
+            messageDiv.dataset.messageId = message.id;
 
-            if (message.user === nomeUsuario) {
-                messageDiv.classList.add('user');
-            } else {
-                messageDiv.classList.add('other');
+            const time = new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${message.user}</span>
+                    <span>${time}</span>
+                </div>
+                <div class="message-body">${message.text}</div>
+                ${message.userId === currentUser.id ? `
+                    <div class="message-actions">
+                        <button class="delete-btn" title="Excluir">🗑️</button>
+                    </div>
+                ` : ''}
+            `;
+
+            if (message.userId === currentUser.id) {
+                messageDiv.querySelector('.delete-btn').addEventListener('click', () => {
+                    if (confirm('Deseja realmente excluir esta mensagem?')) {
+                        deleteMessage(message.id);
+                    }
+                });
             }
 
-            messageDiv.textContent = `${message.user}: ${message.text}`;
-            messagesDiv.appendChild(messageDiv);
+            return messageDiv;
+        };
 
-            // Rola automaticamente para a última mensagem
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+        // Atualizações em Tempo Real
+        const setupListeners = () => {
+            // Mensagens
+            db.ref('messages')
+                .orderByChild('timestamp')
+                .on('child_added', (snapshot) => {
+                    const message = { id: snapshot.key, ...snapshot.val() };
+                    if (message.status === 'active') {
+                        elements.messages.appendChild(createMessageElement(message));
+                        elements.messages.scrollTop = elements.messages.scrollHeight;
+                    }
+                });
 
-        db.ref('messages').on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            displayMessage(message);
+            db.ref('messages')
+                .on('child_removed', (snapshot) => {
+                    const messageElement = document.querySelector(`[data-message-id="${snapshot.key}"]`);
+                    if (messageElement) messageElement.remove();
+                });
+
+            // Usuários Online
+            db.ref('users')
+                .orderByChild('online')
+                .equalTo(true)
+                .on('value', (snapshot) => {
+                    const users = snapshot.val() || {};
+                    elements.onlineCount.textContent = Object.keys(users).length;
+                    
+                    elements.onlineUsers.innerHTML = `
+                        <h3>Usuários Online:</h3>
+                        ${Object.values(users).map(user => `
+                            <div class="user-status">
+                                <div class="online-dot"></div>
+                                ${user.name} 
+                                ${user.isTyping ? '<span class="typing-indicator">(digitando...)</span>' : ''}
+                            </div>
+                        `).join('')}
+                    `;
+                });
+
+            // Indicador de Digitação
+            elements.messageInput.addEventListener('input', () => {
+                if (!currentUser.isTyping) {
+                    db.ref(`users/${currentUser.id}`).update({ isTyping: true });
+                    currentUser.isTyping = true;
+                }
+                
+                clearTimeout(currentUser.lastTypingTime);
+                currentUser.lastTypingTime = setTimeout(() => {
+                    db.ref(`users/${currentUser.id}`).update({ isTyping: false });
+                    currentUser.isTyping = false;
+                }, 1500);
+            });
+        };
+
+        // Event Listeners
+        elements.enterChat.addEventListener('click', () => {
+            currentUser.name = elements.usernameInput.value.trim();
+            if (currentUser.name) {
+                elements.inputArea.style.display = 'flex';
+                elements.usernameInput.disabled = true;
+                elements.enterChat.disabled = true;
+                initUser();
+                setupListeners();
+            }
         });
 
-        const senhaCorreta = "1234"; // Senha fixa para apagar mensagens
+        elements.sendButton.addEventListener('click', sendMessage);
+        elements.messageInput.addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
 
-        clearButton.addEventListener('click', () => {
-            const senhaDigitada = prompt("Digite a senha para apagar todas as mensagens:");
-
-            if (senhaDigitada === senhaCorreta) {
+        elements.clearButton.addEventListener('click', () => {
+            const password = prompt('Senha de administração:');
+            if (password === '1234') {
                 db.ref('messages').remove();
-                messagesDiv.innerHTML = "";
-                alert("Mensagens apagadas com sucesso!");
-            } else {
-                alert("Senha incorreta! Ação cancelada.");
-            }
-        });
-
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
-                sendMessage();
             }
         });
     </script>
