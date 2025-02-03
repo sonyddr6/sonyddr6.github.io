@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Botão que Desaparece</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .botao-magico {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .botao-magico:hover {
+            background-color: #45a049;
+            transform: scale(1.1);
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="botaoMagico" class="botao-magico">Clique em Mim!</button>
+    </div>
+
+    <script>
+        document.getElementById('botaoMagico').addEventListener('click', function() {
+            this.classList.add('fade-out');
+            setTimeout(() => {
+                this.style.display = 'none';
+            }, 500);
+        });
+    </script>
+</body>
+</html>
