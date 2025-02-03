@@ -211,161 +211,194 @@
     <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
   </div>
 
-  <script>
-    // Configuração do Firebase
-    // Substitua SUA_API_KEY e outros valores pelas credenciais do SEU projeto
-const firebaseConfig = {
-  apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5j...", // Sua chave de API real
-  authDomain: "supercontador-ab2b7.firebaseapp.com",
-  databaseURL: "https://supercontador-ab2b7-default-rtdb.firebaseio.com/",
-  projectId: "supercontador-ab2b7",
-  storageBucket: "supercontador-ab2b7.appspot.com",
-  messagingSenderId: "123456789012", // Seu sender ID real
-  appId: "1:123456789012:web:abcd1234..." // Seu App ID real
-};
+<script>
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5j...", // Sua chave de API real
+    authDomain: "supercontador-ab2b7.firebaseapp.com",
+    databaseURL: "https://supercontador-ab2b7-default-rtdb.firebaseio.com/",
+    projectId: "supercontador-ab2b7",
+    storageBucket: "supercontador-ab2b7.appspot.com",
+    messagingSenderId: "123456789012", // Seu sender ID real
+    appId: "1:123456789012:web:abcd1234..." // Seu App ID real
+  };
 
-    // Inicialize o Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+  // Inicialize o Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-    // Referências do Banco de Dados
-    const clicksRef = database.ref('clicks');
-    const usersRef = database.ref('users');
+  // Referências do Banco de Dados
+  const clicksRef = database.ref('clicks');
+  const usersRef = database.ref('users');
 
-    // Variáveis globais
-    let count = 0;
-    let currentUserRef = null;
+  // Variáveis globais
+  let count = 0;
+  let currentUserRef = null;
+  let currentUser = null;  // Variável para armazenar o usuário autenticado
 
-    // Elementos DOM
-    const counterDiv = document.getElementById('counter');
+  // Elementos DOM
+  const counterDiv = document.getElementById('counter');
 
-    // Função de inicialização do usuário
-    function initUserPresence() {
-      // Cria uma nova entrada para o usuário
-      currentUserRef = usersRef.push();
-      
-      // Dados iniciais do usuário
-      const userData = {
-        id: Date.now(),
-        lastActive: firebase.database.ServerValue.TIMESTAMP,
-        device: navigator.userAgentData?.mobile ? 'Mobile' : 'Desktop',
-        clicks: 0
-      };
-
-      // Atualiza os dados do usuário
-      currentUserRef.set(userData);
-
-      // Atualiza o último acesso a cada 30 segundos
-      const presenceInterval = setInterval(() => {
-        currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
-      }, 30000);
-
-      // Remove o usuário ao desconectar
-      currentUserRef.onDisconnect().remove();
-
-      // Ouvir mudanças na lista de usuários
-      usersRef.on('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        const onlineCount = Object.keys(users).length;
-        document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
-        
-        // Atualizar contagem total de cliques
-        let totalClicks = 0;
-        Object.values(users).forEach(user => {
-          totalClicks += user.clicks || 0;
+  // Função de inicialização do usuário com autenticação anônima
+  function initUserPresence() {
+    // Autenticação anônima
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            currentUser = user;
+            checkUsername(); // Verifica se o nome de usuário está configurado
+            setupUserPresence(); // Configura a presença do usuário
+          }
         });
-        console.log('Total de cliques de todos usuários:', totalClicks);
       });
-    }
+  }
 
-    // Função de clique atualizada
-    function handleClick() {
-      count++;
-      
-      // Atualiza localmente e no Firebase
-      counterDiv.textContent = count;
-      clicksRef.set(count);
-      
-      // Atualiza os cliques do usuário
-      currentUserRef.transaction((user) => {
-        if (user) {
-          user.clicks = (user.clicks || 0) + 1;
-          user.lastActive = firebase.database.ServerValue.TIMESTAMP;
-        }
-        return user;
-      });
-
-      counterDiv.classList.add('counter-animation');
-      setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
-      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
-      
-      if (achievements[count]) {
-        showAchievement(achievements[count]);
-      }
-    }
-
-    // Touch/Click
-    clickBtn.addEventListener('click', handleClick);
-    clickBtn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      handleClick();
-    });
-
-    // Reset atualizado
-    resetBtn.addEventListener('click', function() {
-      count = 0;
-      clicksRef.set(0);
-      counterDiv.textContent = count;
-      localStorage.removeItem('clicks');
-      hiddenBtn.style.display = 'none';
-      
-      // Reseta os cliques do usuário
-      currentUserRef.update({ clicks: 0 });
-    });
-
-    // Conquistas
-    function showAchievement(text) {
-      const div = document.createElement('div');
-      div.className = 'achievement';
-      div.textContent = text;
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), 2000);
-    }
-
-    // Modo Escuro
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
-    });
-
-    // Proteções
-    document.addEventListener('contextmenu', event => event.preventDefault());
+  // Função para verificar se o nome de usuário está configurado
+  function checkUsername() {
+    const userRef = database.ref('users/' + currentUser.uid);
     
-    document.onkeydown = function(e) {
-      if (
-        e.keyCode == 123 || 
-        (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||
-        (e.ctrlKey && e.keyCode == 85)
-      ) {
-        alert('Recurso desabilitado!');
-        return false;
+    userRef.once('value').then((snapshot) => {
+      if (!snapshot.exists() || !snapshot.val().username) {
+        showUsernameModal(); // Mostra o modal para inserir o nome de usuário
       }
-    };
+    });
+  }
 
-    // Detecção Mobile
-    if ('ontouchstart' in window) {
-      document.body.classList.add('touch-device');
-      document.documentElement.style.setProperty('--button-size', '60px');
+  // Função para exibir o modal de inserção de nome de usuário
+  function showUsernameModal() {
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('usernameModal').style.display = 'block';
+  }
+
+  // Função para salvar o nome de usuário no banco de dados
+  function saveUsername() {
+    const username = document.getElementById('usernameInput').value.trim();
+    if (username.length < 3 || username.length > 20) {
+      alert('Nome deve ter entre 3 e 20 caracteres!');
+      return;
     }
 
-    // Inicialização
-    clicksRef.on('value', (snapshot) => {
-      count = snapshot.val() || 0;
-      counterDiv.textContent = count;
-      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+    const userRef = database.ref('users/' + currentUser.uid);
+    userRef.update({
+      username: username,
+      created: firebase.database.ServerValue.TIMESTAMP
     });
 
-    initUserPresence();
-  </script>
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('usernameModal').style.display = 'none';
+  }
+
+  // Modifique a exibição de usuários online:
+  usersRef.on('value', (snapshot) => {
+    const users = snapshot.val() || {};
+    const onlineUsers = Object.values(users)
+      .filter(user => user.lastActive > Date.now() - 30000)
+      .map(user => ({
+        name: user.username || 'Anônimo',
+        clicks: user.clicks || 0
+      }));
+
+    document.getElementById('onlineUsers').innerHTML = `
+      Online: ${onlineUsers.length}<br>
+      ${onlineUsers.map(u => `${u.name}: ${u.clicks}`).join('<br>')}
+    `;
+  });
+
+  // Função de clique atualizada
+  function handleClick() {
+    count++;
+    
+    // Atualiza localmente e no Firebase
+    counterDiv.textContent = count;
+    clicksRef.set(count);
+    
+    // Atualiza os cliques do usuário
+    currentUserRef.transaction((user) => {
+      if (user) {
+        user.clicks = (user.clicks || 0) + 1;
+        user.lastActive = firebase.database.ServerValue.TIMESTAMP;
+      }
+      return user;
+    });
+
+    counterDiv.classList.add('counter-animation');
+    setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+    hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+    
+    if (achievements[count]) {
+      showAchievement(achievements[count]);
+    }
+  }
+
+  // Touch/Click
+  clickBtn.addEventListener('click', handleClick);
+  clickBtn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    handleClick();
+  });
+
+  // Reset atualizado
+  resetBtn.addEventListener('click', function() {
+    count = 0;
+    clicksRef.set(0);
+    counterDiv.textContent = count;
+    localStorage.removeItem('clicks');
+    hiddenBtn.style.display = 'none';
+    
+    // Reseta os cliques do usuário
+    currentUserRef.update({ clicks: 0 });
+  });
+
+  // Conquistas
+  function showAchievement(text) {
+    const div = document.createElement('div');
+    div.className = 'achievement';
+    div.textContent = text;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2000);
+  }
+
+  // Modo Escuro
+  themeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
+  });
+
+  // Proteções
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  
+  document.onkeydown = function(e) {
+    if (
+      e.keyCode == 123 || 
+      (e.ctrlKey && e.shiftKey && e.keyCode == 73) ||
+      (e.ctrlKey && e.keyCode == 85)
+    ) {
+      alert('Recurso desabilitado!');
+      return false;
+    }
+  };
+
+  // Detecção Mobile
+  if ('ontouchstart' in window) {
+    document.body.classList.add('touch-device');
+    document.documentElement.style.setProperty('--button-size', '60px');
+  }
+
+  // Inicialização
+  clicksRef.on('value', (snapshot) => {
+    count = snapshot.val() || 0;
+    counterDiv.textContent = count;
+    hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+  });
+
+  initUserPresence(); // Inicia o processo de presença do usuário
+</script>
+  <div class="overlay" id="overlay"></div>
+<div class="username-modal" id="usernameModal">
+  <h2>Bem-vindo! 👋</h2>
+  <input type="text" class="username-input" id="usernameInput" placeholder="Digite seu nome" maxlength="20">
+  <button onclick="saveUsername()" style="margin-top: 10px;">Salvar</button>
+</div>
 </body>
 </html>
