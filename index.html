@@ -225,7 +225,19 @@
       setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
 
       // Botão secreto
-      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+      // Modifique a parte do botão secreto para:
+const hiddenBtn = document.getElementById('hiddenBtn');
+
+// Atualizar visibilidade do botão secreto
+hiddenBtn.style.display = localStorage.getItem('clicks') >= 5 ? 'inline-block' : 'none';
+
+// Alterar o evento de clique do botão secreto
+hiddenBtn.addEventListener('click', function() {
+  // Salvar a contagem atual antes de navegar
+  localStorage.setItem('clicks', count);
+  window.location.href = 'subpage.html';
+});
+     // hiddenBtn.style.display = localStorage.getItem('clicks') >= 500 ? 'inline-block' : 'none'; // sem uso ate momento primeiro comantario 
 
       // Conquistas
       if (achievements[count]) {
