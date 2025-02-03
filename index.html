@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Inicial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .button-container {
+            text-align: center;
+        }
+        .button-container button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .button-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container">
+        <button onclick="verificarSenha('chat.html', 'senhaChat')">Ir para Chat</button>
+        <button onclick="verificarSenha('contador.html', 'senhaContador')">Ir para Contador</button>
+        <button onclick="verificarSenha('forchat.html', 'senhaForChat')">Ir para ForChat</button>
+        <button onclick="verificarSenha('subpage.html', 'senhaSubpage')">Ir para Subpágina</button>
+    </div>
+
+    <script>
+        // Senhas para cada página
+        const senhas = {
+            senhaChat: "chat123",
+            senhaContador: "contador123",
+            senhaForChat: "forchat123",
+            senhaSubpage: "subpage123"
+        };
+
+        // Função para verificar a senha
+        function verificarSenha(pagina, senhaCorreta) {
+            const senhaInserida = prompt(`Digite a senha para acessar ${pagina}:`);
+            
+            if (senhaInserida === senhas[senhaCorreta]) {
+                window.location.href = pagina; // Redireciona se a senha estiver correta
+            } else {
+                alert("Senha incorreta! Tente novamente."); // Exibe um alerta se a senha estiver errada
+            }
+        }
+    </script>
+</body>
+</html>
