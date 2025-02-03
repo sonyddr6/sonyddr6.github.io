@@ -2,22 +2,30 @@
 <html>
 <head>
     <title>Bate-Papo em Tempo Real</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            color: #333;
+            padding: 10px;
         }
 
         #chat-container {
-            width: 400px;
+            width: 90%;
+            max-width: 600px; /* Máximo para não ficar exagerado em telas muito grandes */
+            height: 80vh; /* Ajusta a altura conforme a tela */
             background: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -37,9 +45,8 @@
 
         #messages {
             flex: 1;
-            height: 300px; /* Altura fixa */
             padding: 15px;
-            overflow-y: auto; /* Barra de rolagem */
+            overflow-y: auto;
             background: #f4f4f4;
             border-bottom: 1px solid #ddd;
             display: flex;
@@ -112,6 +119,14 @@
             color: white;
             width: 100%;
             margin-top: 5px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #chat-container {
+                width: 100%;
+                height: 90vh;
+            }
         }
     </style>
 </head>
