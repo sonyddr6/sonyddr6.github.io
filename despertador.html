@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relógio Despertador Agenda com Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f0f0f0;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .clock {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border: 2px solid #333;
+      width: 200px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 8px;
+    }
+    .alarm-form {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .alarm-form input,
+    .alarm-form button {
+      font-size: 1em;
+      margin: 5px;
+      padding: 5px;
+    }
+    .alarm-list {
+      list-style-type: none;
+      padding: 0;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .alarm-list li {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .alarm-list li.active {
+      border-left: 6px solid #28a745;
+    }
+    .alarm-list li.inactive {
+      border-left: 6px solid #dc3545;
+      opacity: 0.6;
+    }
+    .alarm-list button {
+      margin-left: 5px;
+      padding: 5px 8px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Relógio Despertador Agenda</h1>
+  <div class="clock" id="clock">00:00:00</div>
+  
+  <div class="alarm-form">
+    <label for="alarmTime">Defina o horário do alarme (HH:MM:SS): </label>
+    <!-- O input type="time" com step="1" permite definir segundos -->
+    <input type="time" id="alarmTime" step="1">
+    <button id="addAlarm">Adicionar Alarme</button>
+  </div>
+  
+  <h2>Alarmes Agendados</h2>
+  <ul class="alarm-list" id="alarmList"></ul>
+
+  <!-- Inclusão das bibliotecas Firebase (compat) via CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+  
+  <script>
+    /***** Configuração do Firebase *****/
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_dM10X2LL_EHydY72WEKeWnBq506qXFQ",
+      authDomain: "noticechatapp.firebaseapp.com",
+      projectId: "noticechatapp",
+      storageBucket: "noticechatapp.firebasestorage.app",
+      messagingSenderId: "138553371560",
+      appId: "1:138553371560:web:8efecde11b43220e740b9d",
+      measurementId: "G-LDYZGFHL1L"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Inicializa o Firebase Messaging
+    let messaging;
+    try {
+      messaging = firebase.messaging();
+      // Solicita permissão para notificações
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("Permissão para notificações concedida.");
+          // Obtém o token de notificação (lembre-se: no Firebase você deve configurar uma chave VAPID)
+          messaging.getToken({ vapidKey: 'SUA_CHAVE_VAPID_PUBLICA_AQUI' }).then((currentToken) => {
+            if (currentToken) {
+              console.log('Token do Firebase Messaging:', currentToken);
+              // Aqui você pode enviar o token para o seu servidor, se necessário.
+            } else {
+              console.log('Nenhum token disponível. Verifique as configurações.');
+            }
+          }).catch((err) => {
+            console.error('Erro ao obter o token de notificação:', err);
+          });
+        } else {
+          console.log("Permissão para notificações negada.");
+        }
+      });
+    } catch (e) {
+      console.error("Erro na inicialização do Firebase Messaging:", e);
+    }
+
+    /***** Registro do Service Worker via Blob (para GitHub Pages) *****/
+    if ('serviceWorker' in navigator) {
+      // Cria o código do service worker como uma string
+      const swCode = `
+        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+        importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
+        firebase.initializeApp({
+          apiKey: "AIzaSyC_dM10X2LL_EHydY72WEKeWnBq506qXFQ",
+          authDomain: "noticechatapp.firebaseapp.com",
+          projectId: "noticechatapp",
+          storageBucket: "noticechatapp.firebasestorage.app",
+          messagingSenderId: "138553371560",
+          appId: "1:138553371560:web:8efecde11b43220e740b9d",
+          measurementId: "G-LDYZGFHL1L"
+        });
+        const messaging = firebase.messaging();
+        messaging.onBackgroundMessage(function(payload) {
+          console.log('Mensagem recebida no background:', payload);
+          const notificationTitle = payload.notification.title;
+          const notificationOptions = {
+            body: payload.notification.body,
+            icon: payload.notification.icon || 'icone.png'
+          };
+          self.registration.showNotification(notificationTitle, notificationOptions);
+        });
+      `;
+      // Cria um Blob com o código e gera uma URL para registrar o service worker
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      const swURL = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swURL)
+        .then((registration) => {
+          console.log('Service Worker registrado com sucesso:', registration);
+        })
+        .catch((error) => {
+          console.error('Falha ao registrar o Service Worker:', error);
+        });
+    }
+
+    /***** Lógica do Relógio e Alarmes *****/
+    // Atualiza o relógio a cada segundo
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString();
+      checkAlarms(now);
+    }
+    setInterval(updateClock, 1000);
+
+    // Array para armazenar os alarmes
+    const alarmList = [];
+    const alarmListElement = document.getElementById('alarmList');
+
+    // Adiciona um novo alarme quando o botão é clicado
+    document.getElementById('addAlarm').addEventListener('click', () => {
+      const alarmTimeInput = document.getElementById('alarmTime').value;
+      if (!alarmTimeInput) {
+        alert("Por favor, defina um horário para o alarme.");
+        return;
+      }
+      // Cria um objeto de alarme utilizando a data de hoje com o horário escolhido
+      const now = new Date();
+      const [hours, minutes, seconds] = alarmTimeInput.split(':').map(Number);
+      const alarmDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+      // Se o horário já passou, agenda para o dia seguinte
+      if (alarmDate <= now) {
+        alarmDate.setDate(alarmDate.getDate() + 1);
+      }
+      const alarm = {
+        time: alarmDate,
+        active: true,
+        id: Date.now()  // ID único baseado no timestamp
+      };
+      alarmList.push(alarm);
+      renderAlarms();
+    });
+
+    // Renderiza a lista de alarmes na tela
+    function renderAlarms() {
+      alarmListElement.innerHTML = '';
+      alarmList.forEach((alarm) => {
+        const li = document.createElement('li');
+        li.className = alarm.active ? 'active' : 'inactive';
+        const alarmTimeStr = alarm.time.toLocaleTimeString();
+        li.innerHTML = `
+          <span>Alarme para: ${alarmTimeStr}</span>
+          <div>
+            <button onclick="toggleAlarm(${alarm.id})">${alarm.active ? 'Desmarcar' : 'Marcar'}</button>
+            <button onclick="removeAlarm(${alarm.id})">Remover</button>
+          </div>
+        `;
+        alarmListElement.appendChild(li);
+      });
+    }
+
+    // Função para marcar/desmarcar um alarme (ativa/inativa)
+    window.toggleAlarm = function(alarmId) {
+      const alarm = alarmList.find(a => a.id === alarmId);
+      if (alarm) {
+        alarm.active = !alarm.active;
+        renderAlarms();
+      }
+    }
+
+    // Função para remover um alarme da lista
+    window.removeAlarm = function(alarmId) {
+      const index = alarmList.findIndex(a => a.id === alarmId);
+      if (index !== -1) {
+        alarmList.splice(index, 1);
+        renderAlarms();
+      }
+    }
+
+    // Verifica se algum alarme ativo deve disparar
+    function checkAlarms(now) {
+      alarmList.forEach((alarm) => {
+        // Se o alarme estiver ativo e a diferença entre o horário atual e o alarme for inferior a 1 segundo
+        if (alarm.active && Math.abs(now - alarm.time) < 1000) {
+          alarm.active = false;  // Desativa o alarme para que não dispare novamente
+          renderAlarms();
+          // Exibe um alerta e dispara uma notificação do navegador
+          alert(`Alarme! São ${alarm.time.toLocaleTimeString()}`);
+          if (Notification.permission === "granted") {
+            new Notification("Alarme", {
+              body: `Alarme disparado para ${alarm.time.toLocaleTimeString()}`
+            });
+          }
+          // Aqui, futuramente, você poderá integrar o envio de notificações via Firebase (através do seu backend)
+        }
+      });
+    }
+
+    /***** Recebendo mensagens em primeiro plano *****/
+    if (messaging) {
+      messaging.onMessage((payload) => {
+        console.log('Mensagem recebida em primeiro plano:', payload);
+        const notificationTitle = payload.notification.title;
+        const notificationOptions = {
+          body: payload.notification.body,
+          icon: payload.notification.icon || 'icone.png'
+        };
+        if (Notification.permission === "granted") {
+          new Notification(notificationTitle, notificationOptions);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
