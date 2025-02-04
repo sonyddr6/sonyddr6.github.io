@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificações com Firebase</title>
+</head>
+<body>
+    <h1>Notificações Push com Firebase</h1>
+    <button onclick="solicitarPermissao()">Ativar Notificações</button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then((registration) => {
+                    console.log("Service Worker registrado com sucesso!", registration);
+                })
+                .catch((error) => {
+                    console.log("Falha ao registrar Service Worker:", error);
+                });
+        }
+
+        // Solicitar permissão para notificações
+        function solicitarPermissao() {
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    console.log("Permissão concedida!");
+                    obterToken();
+                } else {
+                    console.log("Permissão negada.");
+                }
+            });
+        }
+
+        // Obter Token para notificações
+        function obterToken() {
+            getToken(messaging, { vapidKey: "SUA_VAPID_KEY" }).then((token) => {
+                if (token) {
+                    console.log("Token gerado:", token);
+                    alert("Seu token de notificação foi gerado! Veja no console.");
+                } else {
+                    console.log("Nenhum token disponível.");
+                }
+            }).catch((err) => {
+                console.log("Erro ao obter token:", err);
+            });
+        }
+
+        // Capturar notificações em tempo real
+        onMessage(messaging, (payload) => {
+            console.log("Notificação recebida:", payload);
+            alert(payload.notification.title + " - " + payload.notification.body);
+        });
+    </script>
+</body>
+</html>
