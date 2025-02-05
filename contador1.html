@@ -12,11 +12,18 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
   <style>
-    /* Animação de fundo com gradiente */
+    /* Variáveis e animações de fundo */
+    :root {
+      --button-size: 50px;
+      --counter-size: 3em;
+      --primary-color: #4CAF50;
+      --secondary-color: #f44336;
+      --accent-color: #008CBA;
+    }
     body {
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
       background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
@@ -25,29 +32,26 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      transition: background 0.5s;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
-      transition: background 0.5s;
     }
     @keyframes gradientBG {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    /* Modo escuro com gradiente */
     .dark-mode {
       background: linear-gradient(-45deg, #232526, #414345, #232526, #414345);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       color: #eee;
     }
-    
-    /* Container centralizado com fundo semitransparente */
     .container {
       background: rgba(255, 255, 255, 0.85);
       border-radius: 20px;
       padding: 30px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
       text-align: center;
       max-width: 500px;
       width: 90%;
@@ -55,9 +59,8 @@
     }
     .dark-mode .container {
       background: rgba(30, 30, 30, 0.9);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.6);
     }
-
     h1 {
       margin: 10px 0;
       font-size: 2em;
@@ -67,9 +70,8 @@
     .dark-mode h1 {
       color: #fff;
     }
-
     #counter {
-      font-size: 3em;
+      font-size: var(--counter-size);
       margin: 20px 0;
       color: #555;
       transition: transform 0.3s, color 0.3s;
@@ -77,12 +79,11 @@
     }
     #counter.counter-animation {
       transform: scale(1.2);
-      color: #4CAF50;
+      color: var(--primary-color);
     }
     .dark-mode #counter {
       color: #ccc;
     }
-
     .buttons-container {
       display: flex;
       flex-wrap: wrap;
@@ -90,7 +91,6 @@
       gap: 15px;
       margin-top: 20px;
     }
-
     button {
       position: relative;
       overflow: hidden;
@@ -109,15 +109,15 @@
       filter: brightness(1.1);
     }
     #clickBtn {
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: #fff;
     }
     #resetBtn {
-      background-color: #f44336;
+      background-color: var(--secondary-color);
       color: #fff;
     }
     #hiddenBtn {
-      background-color: #008CBA;
+      background-color: var(--accent-color);
       color: #fff;
       display: none;
     }
@@ -156,7 +156,7 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #4CAF50;
+      background: var(--primary-color);
       color: #fff;
       padding: 10px 20px;
       border-radius: 25px;
@@ -168,13 +168,12 @@
       from { top: -50px; opacity: 0; }
       to { top: 20px; opacity: 1; }
     }
-    /* Efeito ripple ao clicar */
     .ripple {
       position: absolute;
       border-radius: 50%;
       transform: scale(0);
       animation: ripple 0.6s linear;
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255,255,255,0.7);
     }
     @keyframes ripple {
       to {
@@ -182,7 +181,6 @@
         opacity: 0;
       }
     }
-    /* Responsividade */
     @media (max-width: 600px) {
       h1 {
         font-size: 1.8em;
@@ -200,9 +198,9 @@
 <body>
   <!-- Exibe usuários online -->
   <div class="online-users" id="onlineUsers">Usuários Online: 0</div>
-  <!-- Botão para alternar tema -->
-  <button class="theme-btn" id="themeBtn">🌓</button>
-
+  <!-- Botão para alternar o tema -->
+  <button class="theme-btn" id="themeBtn">🌙</button>
+  
   <div class="container">
     <h1>Super Contador Mobile</h1>
     <div id="counter">0</div>
@@ -213,7 +211,7 @@
     </div>
   </div>
 
-  <!-- Overlay de instruções (oculta ao clicar) -->
+  <!-- Overlay de instruções -->
   <div id="overlay" style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); color:#fff; display: flex; align-items: center; justify-content: center; font-size: 1.2em; z-index: 2000;">
     <div>
       <p>Bem-vindo ao Super Contador Interativo!</p>
@@ -228,6 +226,7 @@
       this.style.display = 'none';
     });
 
+    // Configuração do Firebase – substitua pelos seus dados reais
     // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5j...", // Substitua pela sua chave de API real
@@ -239,23 +238,24 @@
       appId: "1:123456789012:web:abcd1234..."
     };
 
-    // Inicializa o Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Função para obter o IP do usuário via API pública
+    // Função para obter o IP do usuário
     async function getIP() {
       try {
-        const response = await fetch("https://api64.ipify.org?format=json");
+        // Usando um endpoint alternativo (mais provável de não ser bloqueado)
+        const response = await fetch("https://api.ipify.org?format=json");
         const data = await response.json();
         return data.ip;
       } catch (error) {
-        console.error("Erro ao obter IP:", error);
-        return null;
+        // Em caso de erro (por exemplo, bloqueado pelo ad blocker), retorna um valor padrão
+        console.warn("Erro ao obter IP. Retornando valor padrão. Detalhe:", error);
+        return "IP não disponível";
       }
     }
 
-    // Variáveis globais para a contagem e usuários
+    // Variáveis globais para a contagem e presença do usuário
     const clicksRef = database.ref('clicks');
     const usersRef = database.ref('users');
     let count = 0;
@@ -267,10 +267,10 @@
     const hiddenBtn = document.getElementById('hiddenBtn');
     const themeBtn = document.getElementById('themeBtn');
 
-    // Carrega som de clique (áudio curto embutido)
+    // Carrega um som curto de clique (áudio embutido em base64 – substitua se desejar)
     const clickSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAAAA");
 
-    // Função para criar o efeito ripple ao clicar
+    // Cria o efeito ripple ao clicar no botão
     function createRipple(event) {
       const button = event.currentTarget;
       const circle = document.createElement("span");
@@ -287,12 +287,12 @@
       button.appendChild(circle);
     }
 
-    // Inicializa a presença do usuário, salvando IP e dados de clique
+    // Inicializa a presença do usuário no Firebase
     async function initUserPresence() {
       const ip = await getIP();
       currentUserRef = usersRef.push();
       const userData = {
-        ip: ip || "não disponível",
+        ip: ip,
         id: Date.now(),
         lastActive: firebase.database.ServerValue.TIMESTAMP,
         device: (navigator.userAgentData && navigator.userAgentData.mobile) ? 'Mobile' : 'Desktop',
@@ -300,12 +300,12 @@
       };
       currentUserRef.set(userData);
 
-      // Atualiza a atividade do usuário a cada 30 segundos
+      // Atualiza a atividade a cada 30 segundos
       setInterval(() => {
         currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
       }, 30000);
 
-      // Remove o usuário ao desconectar
+      // Remove o registro do usuário quando ele desconecta
       currentUserRef.onDisconnect().remove();
 
       // Atualiza a contagem de usuários online
@@ -327,7 +327,7 @@
       1000: "🦄 Clique Lendário!"
     };
 
-    // Exibe mensagem de conquista e dispara confete
+    // Exibe uma conquista e dispara confete
     function showAchievement(text) {
       const div = document.createElement('div');
       div.className = 'achievement';
@@ -343,7 +343,7 @@
       setTimeout(() => div.remove(), 2000);
     }
 
-    // Função de clique: atualiza contagem no Firebase e na interface
+    // Função que lida com o clique, atualizando o contador no Firebase e na interface
     function handleClick(event) {
       createRipple(event);
       clickSound.play().catch(() => {});
@@ -373,11 +373,11 @@
 
     // Eventos para os botões
     clickBtn.addEventListener('click', handleClick);
-    clickBtn.addEventListener('touchend', function(e) {
+    clickBtn.addEventListener('touchend', function (e) {
       e.preventDefault();
       handleClick(e);
     });
-    resetBtn.addEventListener('click', (e) => {
+    resetBtn.addEventListener('click', function (e) {
       createRipple(e);
       count = 0;
       clicksRef.set(0);
@@ -388,17 +388,17 @@
       }
     });
 
-    // Alterna o tema (dark/light)
+    // Alterna o tema (modo claro/escuro)
     themeBtn.addEventListener('click', () => {
       document.body.classList.toggle('dark-mode');
-      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
+      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     });
 
-    // Desabilita o menu de contexto e teclas específicas
+    // Desabilita o menu de contexto e atalhos de desenvolvedor
     document.addEventListener('contextmenu', event => event.preventDefault());
-    document.onkeydown = function(e) {
+    document.onkeydown = function (e) {
       if (
-        e.keyCode === 123 || 
+        e.keyCode === 123 ||
         (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
         (e.ctrlKey && e.keyCode === 85)
       ) {
@@ -412,7 +412,7 @@
       document.body.classList.add('touch-device');
     }
 
-    // Atualiza o contador a partir do Firebase
+    // Atualiza o contador com os dados do Firebase
     clicksRef.on('value', (snapshot) => {
       count = snapshot.val() || 0;
       counterDiv.textContent = count;
