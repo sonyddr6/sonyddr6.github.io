@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Contador Interativo</title>
+
+  <!-- SDK do Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <!-- Biblioteca para efeito de confete -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    /* Animação de fundo com gradiente */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.5s;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Modo escuro com gradiente */
+    .dark-mode {
+      background: linear-gradient(-45deg, #232526, #414345, #232526, #414345);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: #eee;
+    }
+    
+    /* Container centralizado com fundo semitransparente */
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+    }
+    .dark-mode .container {
+      background: rgba(30, 30, 30, 0.9);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: 2em;
+      color: #333;
+      transition: color 0.3s;
+    }
+    .dark-mode h1 {
+      color: #fff;
+    }
+
+    #counter {
+      font-size: 3em;
+      margin: 20px 0;
+      color: #555;
+      transition: transform 0.3s, color 0.3s;
+      font-weight: bold;
+    }
+    #counter.counter-animation {
+      transform: scale(1.2);
+      color: #4CAF50;
+    }
+    .dark-mode #counter {
+      color: #ccc;
+    }
+
+    .buttons-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    button {
+      position: relative;
+      overflow: hidden;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 25px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      outline: none;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    #clickBtn {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    #resetBtn {
+      background-color: #f44336;
+      color: #fff;
+    }
+    #hiddenBtn {
+      background-color: #008CBA;
+      color: #fff;
+      display: none;
+    }
+    .theme-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      background-color: #666;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: background 0.3s;
+      z-index: 1000;
+    }
+    .theme-btn:hover {
+      background-color: #555;
+    }
+    .online-users {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      z-index: 1000;
+    }
+    .achievement {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 25px;
+      animation: slideDown 0.5s ease-out;
+      font-size: 1em;
+      z-index: 1000;
+    }
+    @keyframes slideDown {
+      from { top: -50px; opacity: 0; }
+      to { top: 20px; opacity: 1; }
+    }
+    /* Efeito ripple ao clicar */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    /* Responsividade */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      #counter {
+        font-size: 2.5em;
+      }
+      button {
+        font-size: 1em;
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Exibe usuários online -->
+  <div class="online-users" id="onlineUsers">Usuários Online: 0</div>
+  <!-- Botão para alternar tema -->
+  <button class="theme-btn" id="themeBtn">🌓</button>
+
+  <div class="container">
+    <h1>Super Contador Mobile</h1>
+    <div id="counter">0</div>
+    <div class="buttons-container">
+      <button id="clickBtn">Clique aqui!</button>
+      <button id="resetBtn">Resetar</button>
+      <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
+    </div>
+  </div>
+
+  <!-- Overlay de instruções (oculta ao clicar) -->
+  <div id="overlay" style="position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); color:#fff; display: flex; align-items: center; justify-content: center; font-size: 1.2em; z-index: 2000;">
+    <div>
+      <p>Bem-vindo ao Super Contador Interativo!</p>
+      <p>Clique no botão para aumentar o contador. Conquiste marcos e veja as surpresas!</p>
+      <p>Clique em qualquer lugar para começar...</p>
+    </div>
+  </div>
+
+  <script>
+    // Remove o overlay de instruções ao clicar
+    document.getElementById('overlay').addEventListener('click', function() {
+      this.style.display = 'none';
+    });
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5j...", // Substitua pela sua chave de API real
+      authDomain: "supercontador-ab2b7.firebaseapp.com",
+      databaseURL: "https://supercontador-ab2b7-default-rtdb.firebaseio.com/",
+      projectId: "supercontador-ab2b7",
+      storageBucket: "supercontador-ab2b7.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcd1234..."
+    };
+
+    // Inicializa o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Função para obter o IP do usuário via API pública
+    async function getIP() {
+      try {
+        const response = await fetch("https://api64.ipify.org?format=json");
+        const data = await response.json();
+        return data.ip;
+      } catch (error) {
+        console.error("Erro ao obter IP:", error);
+        return null;
+      }
+    }
+
+    // Variáveis globais para a contagem e usuários
+    const clicksRef = database.ref('clicks');
+    const usersRef = database.ref('users');
+    let count = 0;
+    let currentUserRef = null;
+
+    const counterDiv = document.getElementById('counter');
+    const clickBtn = document.getElementById('clickBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const hiddenBtn = document.getElementById('hiddenBtn');
+    const themeBtn = document.getElementById('themeBtn');
+
+    // Carrega som de clique (áudio curto embutido)
+    const clickSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAAAA");
+
+    // Função para criar o efeito ripple ao clicar
+    function createRipple(event) {
+      const button = event.currentTarget;
+      const circle = document.createElement("span");
+      const diameter = Math.max(button.clientWidth, button.clientHeight);
+      const radius = diameter / 2;
+      circle.style.width = circle.style.height = `${diameter}px`;
+      circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+      circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+      circle.classList.add("ripple");
+      const ripple = button.getElementsByClassName("ripple")[0];
+      if (ripple) {
+        ripple.remove();
+      }
+      button.appendChild(circle);
+    }
+
+    // Inicializa a presença do usuário, salvando IP e dados de clique
+    async function initUserPresence() {
+      const ip = await getIP();
+      currentUserRef = usersRef.push();
+      const userData = {
+        ip: ip || "não disponível",
+        id: Date.now(),
+        lastActive: firebase.database.ServerValue.TIMESTAMP,
+        device: (navigator.userAgentData && navigator.userAgentData.mobile) ? 'Mobile' : 'Desktop',
+        clicks: 0
+      };
+      currentUserRef.set(userData);
+
+      // Atualiza a atividade do usuário a cada 30 segundos
+      setInterval(() => {
+        currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
+      }, 30000);
+
+      // Remove o usuário ao desconectar
+      currentUserRef.onDisconnect().remove();
+
+      // Atualiza a contagem de usuários online
+      usersRef.on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const onlineCount = Object.keys(users).length;
+        document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
+      });
+    }
+
+    // Sistema de conquistas
+    const achievements = {
+      5: "🎉 Primeiros Passos! 5 cliques!",
+      10: "🚀 Dez Maravilhas!",
+      25: "🔥 Vinte e Cinco!",
+      50: "💎 Cinquenta Cliques!",
+      100: "🏆 Centenário Mestre!",
+      500: "👑 Rei dos Cliques!",
+      1000: "🦄 Clique Lendário!"
+    };
+
+    // Exibe mensagem de conquista e dispara confete
+    function showAchievement(text) {
+      const div = document.createElement('div');
+      div.className = 'achievement';
+      div.textContent = text;
+      document.body.appendChild(div);
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+      setTimeout(() => div.remove(), 2000);
+    }
+
+    // Função de clique: atualiza contagem no Firebase e na interface
+    function handleClick(event) {
+      createRipple(event);
+      clickSound.play().catch(() => {});
+      count++;
+
+      clicksRef.set(count);
+
+      if (currentUserRef) {
+        currentUserRef.transaction((user) => {
+          if (user) {
+            user.clicks = (user.clicks || 0) + 1;
+            user.lastActive = firebase.database.ServerValue.TIMESTAMP;
+          }
+          return user;
+        });
+      }
+
+      counterDiv.textContent = count;
+      counterDiv.classList.add('counter-animation');
+      setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
+      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+
+      if (achievements[count]) {
+        showAchievement(achievements[count]);
+      }
+    }
+
+    // Eventos para os botões
+    clickBtn.addEventListener('click', handleClick);
+    clickBtn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      handleClick(e);
+    });
+    resetBtn.addEventListener('click', (e) => {
+      createRipple(e);
+      count = 0;
+      clicksRef.set(0);
+      counterDiv.textContent = count;
+      hiddenBtn.style.display = 'none';
+      if (currentUserRef) {
+        currentUserRef.update({ clicks: 0 });
+      }
+    });
+
+    // Alterna o tema (dark/light)
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
+    });
+
+    // Desabilita o menu de contexto e teclas específicas
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.onkeydown = function(e) {
+      if (
+        e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
+        (e.ctrlKey && e.keyCode === 85)
+      ) {
+        alert('Recurso desabilitado!');
+        return false;
+      }
+    };
+
+    // Ajustes para dispositivos touch
+    if ('ontouchstart' in window) {
+      document.body.classList.add('touch-device');
+    }
+
+    // Atualiza o contador a partir do Firebase
+    clicksRef.on('value', (snapshot) => {
+      count = snapshot.val() || 0;
+      counterDiv.textContent = count;
+      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
+    });
+
+    // Inicializa a presença do usuário ao carregar a página
+    window.addEventListener('load', () => {
+      initUserPresence();
+    });
+  </script>
+</body>
+</html>
