@@ -1,65 +1,194 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Inicial</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .button-container {
-            text-align: center;
-        }
-        .button-container button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #007BFF;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .button-container button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página Inicial</title>
+  <style>
+    /* Aplica box-sizing globalmente */
+    * {
+      box-sizing: border-box;
+    }
+    /* Estilos gerais */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .container button {
+      margin: 10px;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .container button:hover {
+      background-color: #0056b3;
+    }
+    /* Estilos do modal */
+    .modal {
+      display: none; /* Oculto por padrão */
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 20px; /* Garante espaçamento nas bordas em telas menores */
+    }
+    .modal-content {
+      position: relative;
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 5px;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close-button:hover,
+    .close-button:focus {
+      color: #000;
+    }
+    .modal-content input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      display: block;
+    }
+    .modal-content button.submit-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .modal-content button.submit-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <div class="button-container">
-        <button onclick="verificarSenha('chat.html', 'senhaChat')">Ir para Chat</button>
-        <button onclick="verificarSenha('contador.html', 'senhaContador')">Ir para Contador</button>
-        <button onclick="verificarSenha('forchat.html', 'senhaForChat')">Ir para ForChat</button>
-        <button onclick="verificarSenha('subpage.html', 'senhaSubpage')">Ir para Subpágina</button>
+  <div class="container">
+    <button data-page="chat.html" data-senha="senhaChat">Ir para Chat</button>
+    <button data-page="contador.html" data-senha="senhaContador">Ir para Contador</button>
+    <button data-page="forchat.html" data-senha="senhaForChat">Ir para ForChat</button>
+    <button data-page="subpage.html" data-senha="senhaSubpage">Ir para Subpágina</button>
+  </div>
+
+  <!-- Modal Personalizado -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <button class="close-button" id="closeModal" aria-label="Fechar modal">&times;</button>
+      <p id="modalMessage"></p>
+      <input type="password" id="passwordInput" placeholder="Digite a senha">
+      <button class="submit-button" id="submitPassword">Enviar</button>
     </div>
+  </div>
 
-    <script>
-        // Senhas para cada página
-        const senhas = {
-            senhaChat: "chat123",
-            senhaContador: "contador123",
-            senhaForChat: "forchat123",
-            senhaSubpage: "subpage123"
-        };
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Objeto com as senhas para cada página
+      const senhas = {
+        senhaChat: "chat123",
+        senhaContador: "contador123",
+        senhaForChat: "forchat123",
+        senhaSubpage: "subpage123"
+      };
 
-        // Função para verificar a senha
-        function verificarSenha(pagina, senhaCorreta) {
-            const senhaInserida = prompt(`Digite a senha para acessar ${pagina}:`);
-            
-            if (senhaInserida === senhas[senhaCorreta]) {
-                window.location.href = pagina; // Redireciona se a senha estiver correta
-            } else {
-                alert("Senha incorreta! Tente novamente."); // Exibe um alerta se a senha estiver errada
-            }
+      let paginaAtual = "";
+      let senhaChaveAtual = "";
+
+      // Seleciona os elementos do modal
+      const modal = document.getElementById("modal");
+      const modalMessage = document.getElementById("modalMessage");
+      const passwordInput = document.getElementById("passwordInput");
+      const closeModalButton = document.getElementById("closeModal");
+      const submitPasswordButton = document.getElementById("submitPassword");
+
+      // Atribui eventos aos botões da .container
+      document.querySelectorAll('.container button').forEach(button => {
+        button.addEventListener('click', () => {
+          paginaAtual = button.dataset.page;
+          senhaChaveAtual = button.dataset.senha;
+          modalMessage.textContent = `Digite a senha para acessar ${paginaAtual}:`;
+          openModal();
+        });
+      });
+
+      function openModal() {
+        modal.style.display = "block";
+        passwordInput.value = "";
+        passwordInput.focus();
+      }
+
+      function closeModal() {
+        modal.style.display = "none";
+        passwordInput.value = "";
+      }
+
+      // Eventos para fechar o modal e verificar senha
+      closeModalButton.addEventListener('click', closeModal);
+      submitPasswordButton.addEventListener('click', verificarSenha);
+
+      function verificarSenha() {
+        const senhaInserida = passwordInput.value;
+        if (senhaInserida === senhas[senhaChaveAtual]) {
+          window.location.href = paginaAtual;
+        } else {
+          alert("Senha incorreta! Tente novamente.");
         }
-    </script>
+        passwordInput.value = "";
+      }
+
+      // Fecha o modal se o usuário clicar fora do conteúdo
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Permite confirmar a senha ao pressionar "Enter"
+      passwordInput.addEventListener('keyup', (event) => {
+        if (event.key === "Enter") {
+          verificarSenha();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
