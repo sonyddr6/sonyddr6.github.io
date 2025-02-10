@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projeto Completo com Seções</title>
+
+  <!-- Ícones Google (para o menu lateral) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+  <!-- Scripts do Firebase (App + Database) -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+  <style>
+    /* ------------------------------------------------------
+       ESTILOS GERAIS E TEMA
+    ------------------------------------------------------ */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #f0f0f0; /* cor de fundo padrão (claro) */
+      color: #333;
+      display: flex;          /* para que sidebar e conteúdo fiquem lado a lado */
+      flex-direction: row;
+      transition: background-color 0.5s ease;
+    }
+    body.dark-mode {
+      background-color: #333;
+      color: #eee;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    h2, h3 {
+      margin: 0.5rem 0;
+    }
+
+    /* Container principal (conteúdo que varia) */
+    .container {
+      flex: 1;           /* ocupa todo o espaço restante ao lado da sidebar */
+      padding: 1rem;
+      overflow: auto;    /* rolagem vertical se precisar */
+      position: relative;
+    }
+
+    /* Botão de alternar tema (fica no container) */
+    #theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #777;
+      color: #fff;
+    }
+    #theme-toggle:hover {
+      background-color: #555;
+    }
+    body.dark-mode #theme-toggle {
+      background-color: #ddd;
+      color: #333;
+    }
+    body.dark-mode #theme-toggle:hover {
+      background-color: #bbb;
+    }
+
+    /* ------------------------------------------------------
+       SIDEBAR (sempre visível)
+    ------------------------------------------------------ */
+    .menu {
+      width: 60px;
+      background-color: #111a20;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+    }
+    .menu-content {
+      list-style: none;
+      padding: 0;
+      margin-top: 2rem;
+      width: 100%;
+    }
+    .menu-content li {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    .menu-content li a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      color: #fff;
+      transition: background 0.2s ease;
+    }
+    .menu-content li a:hover {
+      background: #1f2b33;
+    }
+    .menu-content li span.material-symbols-outlined {
+      font-size: 24px;
+    }
+
+    /* ------------------------------------------------------
+       ANIMATED NAV LIST (usa para trocar de seção)
+    ------------------------------------------------------ */
+    nav {
+      margin: 1rem 0;
+      width: 14rem;
+      filter: drop-shadow(0.25rem 0.25rem 0.5rem #0005);
+      background: #1f2b33;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      border-bottom: 1px solid #2c3b45;
+    }
+    nav ul li a {
+      display: block;
+      padding: 1rem;
+      color: #fff;
+      transition: transform 0.2s, background 0.2s;
+    }
+    nav ul li a:hover {
+      background: #28353e;
+      transform: translateX(5px);
+    }
+
+    /* ------------------------------------------------------
+       SEÇÕES (cada funcionalidade em seu container)
+    ------------------------------------------------------ */
+    /* Por padrão, escondemos tudo (menos um "home" se quiser) */
+    .content-section {
+      display: none; /* controlado via JS */
+      margin-bottom: 2rem;
+    }
+
+    /* Exemplo de "home-section" para exibição inicial */
+    #home-section {
+      display: block; /* esse aparece primeiro */
+    }
+
+    /* ------------------------------------------------------
+       LOGIN FORM
+    ------------------------------------------------------ */
+    #login-section {
+      background: #111a20;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 300px;
+    }
+    #login-section input {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.6rem;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #0e1c26;
+      color: #fff;
+    }
+    #login-section button {
+      display: block;
+      margin: 0 auto;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #0066ff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* ------------------------------------------------------
+       SMOOTH SCROLL
+    ------------------------------------------------------ */
+    #scroll-section .scroll-list {
+      width: 100%;
+      max-width: 500px;
+      height: 150px;
+      overflow: auto;
+      padding: 1rem;
+      background: #1c2e43;
+      border-radius: 8px;
+      box-shadow: 0px 7px 46px rgba(0, 0, 0, 0.3);
+      scroll-behavior: smooth;
+      color: #fff;
+    }
+
+    /* ------------------------------------------------------
+       CHAT COM FIREBASE
+    ------------------------------------------------------ */
+    #chat-section {
+      width: 100%;
+      max-width: 600px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    body.dark-mode #chat-section {
+      background-color: #444;
+      border-color: #666;
+    }
+
+    /* Form para escolher username */
+    #username-form {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    #username-form h2 {
+      margin-top: 0;
+    }
+    #username-form input {
+      width: calc(100% - 22px);
+      padding: 8px;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #username-form button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+    }
+    body.dark-mode #username-form {
+      border-color: #666;
+    }
+    body.dark-mode #username-form input {
+      border-color: #666; 
+      background-color: #555; 
+      color: #eee;
+    }
+    body.dark-mode #username-form button {
+      background-color: #0056b3;
+    }
+
+    /* Info do usuário atual */
+    #user-info {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+    }
+    body.dark-mode #user-info {
+      border-color: #666;
+    }
+
+    /* Lista de mensagens */
+    #messages {
+      height: 300px;
+      overflow-y: scroll;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    body.dark-mode #messages {
+      border-color: #666;
+    }
+    .message {
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      clear: both;
+    }
+    .user-message { 
+      background-color: #DCF8C6; 
+      float: right; 
+      max-width: 70%; 
+      word-wrap: break-word; 
+    }
+    .other-message { 
+      background-color: #f0f0f0; 
+      float: left; 
+      max-width: 70%; 
+      word-wrap: break-word; 
+    }
+    .message-info { 
+      font-size: 0.8em; 
+      color: #888; 
+      margin-top: 2px; 
+    }
+    .message-text { 
+      font-size: 1em; 
+    }
+    body.dark-mode .other-message {
+      background-color: #555; 
+      color: #eee;
+    }
+
+    /* Form de envio de mensagem */
+    #message-form {
+      display: flex;
+      padding: 10px;
+    }
+    #message-input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+    #send-button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #send-button:hover {
+      background-color: #3e8e41;
+    }
+    body.dark-mode #message-input {
+      border-color: #666; 
+      background-color: #555; 
+      color: #eee;
+    }
+    body.dark-mode #send-button {
+      background-color: #0056b3;
+    }
+    body.dark-mode #send-button:hover {
+      background-color: #003d82;
+    }
+
+    /* Lista de usuários online */
+    #online-users {
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      font-size: 0.9em;
+      color: #555;
+    }
+    #online-users-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #online-users-list li {
+      padding: 3px 0;
+    }
+    .online-dot {
+      height: 10px;
+      width: 10px;
+      background-color: #4CAF50;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    body.dark-mode #online-users {
+      border-color: #666; 
+      color: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR (sempre visível) -->
+  <div class="menu">
+    <ul class="menu-content">
+      <li><a href="#"><span class="material-symbols-outlined">home</span></a></li>
+      <li><a href="#"><span class="material-symbols-outlined">dashboard</span></a></li>
+      <li><a href="#"><span class="material-symbols-outlined">explore</span></a></li>
+      <li><a href="#"><span class="material-symbols-outlined">analytics</span></a></li>
+      <li><a href="#"><span class="material-symbols-outlined">settings</span></a></li>
+      <li><a href="#"><span class="material-symbols-outlined">logout</span></a></li>
+    </ul>
+  </div>
+
+  <!-- CONTAINER PRINCIPAL (onde ficam as seções) -->
+  <div class="container">
+    <!-- Botão de alternar tema -->
+    <button id="theme-toggle">Alternar Tema</button>
+
+    <!-- NAV ANIMADA (para escolher qual seção mostrar) -->
+    <nav>
+      <ul id="feature-nav">
+        <li><a data-target="home-section">Home</a></li>
+        <li><a data-target="login-section">Login</a></li>
+        <li><a data-target="scroll-section">Scroll</a></li>
+        <li><a data-target="chat-section">Chat</a></li>
+      </ul>
+    </nav>
+
+    <!-- SEÇÃO HOME (exemplo) -->
+    <div id="home-section" class="content-section">
+      <h2>Bem-vindo!</h2>
+      <p>Esta é a Home. Use o menu acima para navegar entre as seções.</p>
+    </div>
+
+    <!-- SEÇÃO LOGIN -->
+    <div id="login-section" class="content-section">
+      <h2>LOGIN</h2>
+      <input type="text" id="uname" placeholder="Username" />
+      <input type="password" id="pass" placeholder="Password" />
+      <button id="login-btn">Login</button>
+    </div>
+
+    <!-- SEÇÃO SMOOTH SCROLL -->
+    <div id="scroll-section" class="content-section">
+      <h2>Smooth Scroll</h2>
+      <div class="scroll-list">
+        <p>Conteúdo 1</p>
+        <p>Conteúdo 2</p>
+        <p>Conteúdo 3</p>
+        <p>Conteúdo 4</p>
+        <p>Conteúdo 5</p>
+        <p>Fim da Lista</p>
+      </div>
+    </div>
+
+    <!-- SEÇÃO CHAT -->
+    <div id="chat-section" class="content-section">
+      <!-- Form para escolher nome de usuário -->
+      <div id="username-form">
+        <h2>Escolha um Nome de Usuário</h2>
+        <input type="text" id="username-input" placeholder="Nome de Usuário" required>
+        <button id="username-button">Entrar</button>
+      </div>
+      <!-- Exibe quem é o usuário -->
+      <div id="user-info"></div>
+      <!-- Mensagens -->
+      <div id="messages"></div>
+      <!-- Form de envio de mensagem -->
+      <form id="message-form">
+        <input type="text" id="message-input" placeholder="Digite sua mensagem..." autocomplete="off">
+        <button type="submit" id="send-button">Enviar</button>
+      </form>
+      <!-- Lista de usuários online -->
+      <div id="online-users">
+        <strong>Usuários Online:</strong>
+        <ul id="online-users-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script>
+    // ------------------------------
+    // 1) Alternância de Tema
+    // ------------------------------
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    });
+
+    // ------------------------------
+    // 2) Navegação (mostrar/ocultar seções)
+    // ------------------------------
+    const navLinks = document.querySelectorAll('#feature-nav a');
+    const sections = document.querySelectorAll('.content-section');
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('data-target');
+
+        // Esconde todas as seções
+        sections.forEach(sec => sec.style.display = 'none');
+        // Mostra somente a seção clicada
+        document.getElementById(targetId).style.display = 'block';
+      });
+    });
+
+    // ------------------------------
+    // 3) Exemplo simples de Login
+    // ------------------------------
+    const loginBtn = document.getElementById('login-btn');
+    loginBtn.addEventListener('click', () => {
+      const unameVal = document.getElementById('uname').value.trim();
+      const passVal = document.getElementById('pass').value.trim();
+      if (unameVal && passVal) {
+        alert(`Login realizado! Bem-vindo, ${unameVal}`);
+      } else {
+        alert('Preencha usuário e senha!');
+      }
+    });
+
+    // ------------------------------
+    // 4) Firebase para o Chat
+    // ------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzv6YNzNbdGY_IP2kBtTJNjfdbDrURxN8",
+  authDomain: "simple-duck.firebaseapp.com",
+  databaseURL: "https://simple-duck-default-rtdb.firebaseio.com",
+  projectId: "simple-duck",
+  storageBucket: "simple-duck.firebasestorage.app",
+  messagingSenderId: "469692647079",
+  appId: "1:469692647079:web:577694159b63b291cdfd82",
+  measurementId: "G-SDDEGZ89KH"
+
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+    const messagesRef = db.ref('messages');
+    const usersRef = db.ref('users');
+    const presenceRef = db.ref('.info/connected');
+    const userStatusDatabaseRef = db.ref('/status');
+
+    // Elementos do Chat
+    const usernameForm = document.getElementById('username-form');
+    const usernameInput = document.getElementById('username-input');
+    const usernameButton = document.getElementById('username-button');
+    const userInfoDiv = document.getElementById('user-info');
+    const messagesDiv = document.getElementById('messages');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const onlineUsersList = document.getElementById('online-users-list');
+
+    let currentUserId = null;
+    let currentUsername = null;
+
+    usernameButton.addEventListener('click', setUsername);
+
+    function setUsername() {
+      const newUsername = usernameInput.value.trim();
+      if (!newUsername) {
+        alert("Nome de usuário inválido.");
+        return;
+      }
+      checkUsernameAvailability(newUsername)
+        .then(isAvailable => {
+          if (isAvailable) {
+            // gera uma key no Firebase
+            const userId = usersRef.push().key;
+            currentUserId = userId;
+            // grava a relação userId -> username
+            return usersRef.child(userId).set({ username: newUsername });
+          } else {
+            throw new Error("Nome de usuário indisponível.");
+          }
+        })
+        .then(() => {
+          currentUsername = newUsername;
+          usernameForm.style.display = 'none'; // esconde o form
+          userInfoDiv.textContent = `Usuário: ${currentUsername}`;
+          setupPresence();
+          setupMessageListener();
+        })
+        .catch(err => {
+          console.error("Erro:", err.message);
+          alert(err.message);
+        });
+    }
+
+    // Verifica se o nome já está em uso
+    function checkUsernameAvailability(username) {
+      return usersRef.orderByChild('username').equalTo(username).once('value')
+        .then(snapshot => !snapshot.exists());
+    }
+
+    // Configura presença
+    function setupPresence() {
+      const myConnectionsRef = userStatusDatabaseRef.child(currentUserId);
+      presenceRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          myConnectionsRef.set({
+            username: currentUsername,
+            status: 'online',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          });
+          myConnectionsRef.onDisconnect().remove();
+          usersRef.child(currentUserId).onDisconnect().remove();
+          keepAlive();
+        }
+      });
+      displayOnlineUsers();
+    }
+
+    // Mantém vivo com timestamps
+    function keepAlive() {
+      setInterval(() => {
+        if (currentUserId) {
+          const userPresenceRef = userStatusDatabaseRef.child(currentUserId);
+          userPresenceRef.update({
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+          });
+        }
+      }, 5000);
+    }
+
+    // Mostra usuários online
+    function displayOnlineUsers() {
+      userStatusDatabaseRef.on('value', (snapshot) => {
+        onlineUsersList.innerHTML = '';
+        snapshot.forEach((childSnapshot) => {
+          const user = childSnapshot.val();
+          if (user && user.username && user.status === 'online') {
+            const li = document.createElement('li');
+            const dotSpan = document.createElement('span');
+            dotSpan.classList.add('online-dot');
+            li.appendChild(dotSpan);
+            li.appendChild(document.createTextNode(user.username));
+            onlineUsersList.appendChild(li);
+          }
+        });
+      });
+    }
+
+    // Escuta envio de mensagens
+    messageForm.addEventListener('submit', sendMessage);
+
+    function sendMessage(e) {
+      e.preventDefault();
+      const messageText = messageInput.value.trim();
+      if (!messageText || !currentUserId || !currentUsername) return;
+      messagesRef.push({
+        userId: currentUserId,
+        username: currentUsername,
+        text: messageText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        messageInput.value = '';
+        messageInput.focus();
+      }).catch(err => {
+        console.error("Erro ao enviar mensagem:", err);
+        alert("Erro ao enviar mensagem.");
+      });
+    }
+
+    // Escuta mensagens adicionadas
+    function setupMessageListener() {
+      messagesRef.limitToLast(20).on('child_added', snapshot => {
+        displayMessage(snapshot.val());
+      });
+    }
+
+    // Renderiza mensagem na tela
+    function displayMessage(msgObj) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message');
+      if (msgObj.userId === currentUserId) {
+        msgDiv.classList.add('user-message');
+      } else {
+        msgDiv.classList.add('other-message');
+      }
+
+      const infoDiv = document.createElement('div');
+      infoDiv.classList.add('message-info');
+      const time = new Date(msgObj.timestamp).toLocaleString();
+      infoDiv.textContent = `${msgObj.username} (${time})`;
+
+      const textDiv = document.createElement('div');
+      textDiv.classList.add('message-text');
+      textDiv.textContent = msgObj.text;
+
+      msgDiv.appendChild(infoDiv);
+      msgDiv.appendChild(textDiv);
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
