@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projeto Completo com Seções</title>
+  <title>Projeto Completo com Sidebar Controlando Seções</title>
 
   <!-- Ícones Google (para o menu lateral) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
@@ -24,9 +24,9 @@
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      background-color: #f0f0f0; /* cor de fundo padrão (claro) */
+      background-color: #f0f0f0; /* cor clara padrão */
       color: #333;
-      display: flex;          /* para que sidebar e conteúdo fiquem lado a lado */
+      display: flex;       /* Sidebar + Conteúdo lado a lado */
       flex-direction: row;
       transition: background-color 0.5s ease;
     }
@@ -41,19 +41,15 @@
       cursor: pointer;
     }
 
-    h2, h3 {
-      margin: 0.5rem 0;
-    }
-
-    /* Container principal (conteúdo que varia) */
+    /* Container principal (onde ficam as seções) */
     .container {
-      flex: 1;           /* ocupa todo o espaço restante ao lado da sidebar */
+      flex: 1;
       padding: 1rem;
-      overflow: auto;    /* rolagem vertical se precisar */
-      position: relative;
+      overflow: auto;      /* rolagem vertical se precisar */
+      position: relative;  /* para posicionar o botão de tema */
     }
 
-    /* Botão de alternar tema (fica no container) */
+    /* Botão de alternar tema */
     #theme-toggle {
       position: absolute;
       top: 10px;
@@ -77,7 +73,7 @@
     }
 
     /* ------------------------------------------------------
-       SIDEBAR (sempre visível)
+       SIDEBAR (menu lateral)
     ------------------------------------------------------ */
     .menu {
       width: 60px;
@@ -102,7 +98,7 @@
     .menu-content li a {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: center; /* Ícones centralizados */
       gap: 0.5rem;
       padding: 0.5rem;
       color: #fff;
@@ -116,51 +112,19 @@
     }
 
     /* ------------------------------------------------------
-       ANIMATED NAV LIST (usa para trocar de seção)
+       SEÇÕES (cada funcionalidade em sua div)
     ------------------------------------------------------ */
-    nav {
-      margin: 1rem 0;
-      width: 14rem;
-      filter: drop-shadow(0.25rem 0.25rem 0.5rem #0005);
-      background: #1f2b33;
-      border-radius: 0.5rem;
-      overflow: hidden;
-    }
-    nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-    nav ul li {
-      border-bottom: 1px solid #2c3b45;
-    }
-    nav ul li a {
-      display: block;
-      padding: 1rem;
-      color: #fff;
-      transition: transform 0.2s, background 0.2s;
-    }
-    nav ul li a:hover {
-      background: #28353e;
-      transform: translateX(5px);
-    }
-
-    /* ------------------------------------------------------
-       SEÇÕES (cada funcionalidade em seu container)
-    ------------------------------------------------------ */
-    /* Por padrão, escondemos tudo (menos um "home" se quiser) */
     .content-section {
-      display: none; /* controlado via JS */
+      display: none; /* Controlado via JS */
       margin-bottom: 2rem;
     }
-
-    /* Exemplo de "home-section" para exibição inicial */
+    /* "Home" começa aparecendo */
     #home-section {
-      display: block; /* esse aparece primeiro */
+      display: block;
     }
 
     /* ------------------------------------------------------
-       LOGIN FORM
+       LOGIN
     ------------------------------------------------------ */
     #login-section {
       background: #111a20;
@@ -190,7 +154,7 @@
     }
 
     /* ------------------------------------------------------
-       SMOOTH SCROLL
+       SCROLL
     ------------------------------------------------------ */
     #scroll-section .scroll-list {
       width: 100%;
@@ -206,7 +170,7 @@
     }
 
     /* ------------------------------------------------------
-       CHAT COM FIREBASE
+       CHAT (Firebase)
     ------------------------------------------------------ */
     #chat-section {
       width: 100%;
@@ -259,7 +223,7 @@
       background-color: #0056b3;
     }
 
-    /* Info do usuário atual */
+    /* Info do usuário */
     #user-info {
       padding: 10px;
       border-bottom: 1px solid #ddd;
@@ -269,7 +233,7 @@
       border-color: #666;
     }
 
-    /* Lista de mensagens */
+    /* Mensagens */
     #messages {
       height: 300px;
       overflow-y: scroll;
@@ -372,41 +336,33 @@
       border-color: #666; 
       color: #eee;
     }
+
   </style>
 </head>
 
 <body>
-  <!-- SIDEBAR (sempre visível) -->
+
+  <!-- SIDEBAR -->
   <div class="menu">
     <ul class="menu-content">
-      <li><a href="#"><span class="material-symbols-outlined">home</span></a></li>
-      <li><a href="#"><span class="material-symbols-outlined">dashboard</span></a></li>
-      <li><a href="#"><span class="material-symbols-outlined">explore</span></a></li>
-      <li><a href="#"><span class="material-symbols-outlined">analytics</span></a></li>
+      <!-- Cada li -> "data-target" aponta pra seção que quer exibir -->
+      <li><a data-target="home-section"><span class="material-symbols-outlined">home</span></a></li>
+      <li><a data-target="login-section"><span class="material-symbols-outlined">dashboard</span></a></li>
+      <li><a data-target="scroll-section"><span class="material-symbols-outlined">explore</span></a></li>
+      <li><a data-target="chat-section"><span class="material-symbols-outlined">analytics</span></a></li>
       <li><a href="#"><span class="material-symbols-outlined">settings</span></a></li>
       <li><a href="#"><span class="material-symbols-outlined">logout</span></a></li>
     </ul>
   </div>
 
-  <!-- CONTAINER PRINCIPAL (onde ficam as seções) -->
+  <!-- CONTEÚDO PRINCIPAL (Seções) -->
   <div class="container">
-    <!-- Botão de alternar tema -->
     <button id="theme-toggle">Alternar Tema</button>
 
-    <!-- NAV ANIMADA (para escolher qual seção mostrar) -->
-    <nav>
-      <ul id="feature-nav">
-        <li><a data-target="home-section">Home</a></li>
-        <li><a data-target="login-section">Login</a></li>
-        <li><a data-target="scroll-section">Scroll</a></li>
-        <li><a data-target="chat-section">Chat</a></li>
-      </ul>
-    </nav>
-
-    <!-- SEÇÃO HOME (exemplo) -->
+    <!-- SEÇÃO HOME (padrão visível) -->
     <div id="home-section" class="content-section">
       <h2>Bem-vindo!</h2>
-      <p>Esta é a Home. Use o menu acima para navegar entre as seções.</p>
+      <p>Esta é a Home. Use o menu lateral para navegar entre as seções.</p>
     </div>
 
     <!-- SEÇÃO LOGIN -->
@@ -417,37 +373,32 @@
       <button id="login-btn">Login</button>
     </div>
 
-    <!-- SEÇÃO SMOOTH SCROLL -->
+    <!-- SEÇÃO SCROLL -->
     <div id="scroll-section" class="content-section">
-      <h2>Smooth Scroll</h2>
+      <h2>Exemplo de Smooth Scroll</h2>
       <div class="scroll-list">
-        <p>Conteúdo 1</p>
-        <p>Conteúdo 2</p>
-        <p>Conteúdo 3</p>
-        <p>Conteúdo 4</p>
-        <p>Conteúdo 5</p>
-        <p>Fim da Lista</p>
+        <p>Item 1</p>
+        <p>Item 2</p>
+        <p>Item 3</p>
+        <p>Item 4</p>
+        <p>Item 5</p>
+        <p>Fim da Lista!</p>
       </div>
     </div>
 
     <!-- SEÇÃO CHAT -->
     <div id="chat-section" class="content-section">
-      <!-- Form para escolher nome de usuário -->
       <div id="username-form">
         <h2>Escolha um Nome de Usuário</h2>
         <input type="text" id="username-input" placeholder="Nome de Usuário" required>
         <button id="username-button">Entrar</button>
       </div>
-      <!-- Exibe quem é o usuário -->
       <div id="user-info"></div>
-      <!-- Mensagens -->
       <div id="messages"></div>
-      <!-- Form de envio de mensagem -->
       <form id="message-form">
         <input type="text" id="message-input" placeholder="Digite sua mensagem..." autocomplete="off">
         <button type="submit" id="send-button">Enviar</button>
       </form>
-      <!-- Lista de usuários online -->
       <div id="online-users">
         <strong>Usuários Online:</strong>
         <ul id="online-users-list"></ul>
@@ -457,9 +408,9 @@
 
   <!-- SCRIPT PRINCIPAL -->
   <script>
-    // ------------------------------
-    // 1) Alternância de Tema
-    // ------------------------------
+    // ------------------------------------
+    // 1) Alternar Tema (Claro/Escuro)
+    // ------------------------------------
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (localStorage.getItem('darkMode') === 'true') {
       document.body.classList.add('dark-mode');
@@ -469,26 +420,31 @@
       localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     });
 
-    // ------------------------------
-    // 2) Navegação (mostrar/ocultar seções)
-    // ------------------------------
-    const navLinks = document.querySelectorAll('#feature-nav a');
+    // ------------------------------------
+    // 2) Sidebar -> Navegar entre seções
+    // ------------------------------------
+    const sidebarLinks = document.querySelectorAll('.menu-content li a[data-target]');
     const sections = document.querySelectorAll('.content-section');
-    navLinks.forEach(link => {
+
+    sidebarLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
+        // Identifica a seção alvo
         const targetId = link.getAttribute('data-target');
 
         // Esconde todas as seções
-        sections.forEach(sec => sec.style.display = 'none');
-        // Mostra somente a seção clicada
+        sections.forEach(sec => {
+          sec.style.display = 'none';
+        });
+
+        // Mostra só a seção clicada
         document.getElementById(targetId).style.display = 'block';
       });
     });
 
-    // ------------------------------
+    // ------------------------------------
     // 3) Exemplo simples de Login
-    // ------------------------------
+    // ------------------------------------
     const loginBtn = document.getElementById('login-btn');
     loginBtn.addEventListener('click', () => {
       const unameVal = document.getElementById('uname').value.trim();
@@ -500,11 +456,11 @@
       }
     });
 
-    // ------------------------------
+    // ------------------------------------
     // 4) Firebase para o Chat
-    // ------------------------------
+    // ------------------------------------
     const firebaseConfig = {
-      apiKey: "AIzaSyAzv6YNzNbdGY_IP2kBtTJNjfdbDrURxN8",
+apiKey: "AIzaSyAzv6YNzNbdGY_IP2kBtTJNjfdbDrURxN8",
   authDomain: "simple-duck.firebaseapp.com",
   databaseURL: "https://simple-duck-default-rtdb.firebaseio.com",
   projectId: "simple-duck",
@@ -592,7 +548,6 @@
       displayOnlineUsers();
     }
 
-    // Mantém vivo com timestamps
     function keepAlive() {
       setInterval(() => {
         if (currentUserId) {
@@ -604,7 +559,7 @@
       }, 5000);
     }
 
-    // Mostra usuários online
+    // Atualiza lista de usuários online
     function displayOnlineUsers() {
       userStatusDatabaseRef.on('value', (snapshot) => {
         onlineUsersList.innerHTML = '';
@@ -622,9 +577,8 @@
       });
     }
 
-    // Escuta envio de mensagens
+    // Envio de mensagem
     messageForm.addEventListener('submit', sendMessage);
-
     function sendMessage(e) {
       e.preventDefault();
       const messageText = messageInput.value.trim();
@@ -643,14 +597,13 @@
       });
     }
 
-    // Escuta mensagens adicionadas
+    // Exibe mensagens
     function setupMessageListener() {
       messagesRef.limitToLast(20).on('child_added', snapshot => {
         displayMessage(snapshot.val());
       });
     }
 
-    // Renderiza mensagem na tela
     function displayMessage(msgObj) {
       const msgDiv = document.createElement('div');
       msgDiv.classList.add('message');
