@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat Interface</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Estilos básicos e de layout */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Roboto Mono', monospace;
+    }
+    body {
+      background-color: #1e1e1e;
+      color: #f8f8f2;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 300px;
+      background-color: #2d2d2d;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #444;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: 500;
+    }
+    .conversation-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .conversation {
+      padding: 10px 15px;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .conversation:hover,
+    .conversation.active {
+      background-color: #3a3a3a;
+    }
+    .conversation-title {
+      flex: 1;
+      padding-right: 10px;
+      cursor: pointer;
+    }
+    .title-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #f8f8f2;
+      font-family: 'Roboto Mono', monospace;
+      padding: 2px 5px;
+      border-bottom: 1px solid #4d6bfe;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ff5555;
+      cursor: pointer;
+      padding: 5px;
+    }
+    #new-chat-btn {
+      margin: 20px;
+      padding: 10px;
+      background-color: #4d6bfe;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #new-chat-btn:hover {
+      background-color: #3b5cf8;
+    }
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid #444;
+      background-color: #2d2d2d;
+      font-size: 1.3em;
+      font-weight: 500;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #1e1e1e;
+    }
+    .message {
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 60%;
+      word-wrap: break-word;
+    }
+    .message.sent {
+      background-color: #4d6bfe;
+      margin-left: auto;
+    }
+    .message.received {
+      background-color: #3a3a3a;
+    }
+    .timestamp {
+      font-size: 0.7em;
+      text-align: right;
+      margin-top: 5px;
+      opacity: 0.8;
+    }
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #444;
+      background-color: #2d2d2d;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #1e1e1e;
+      color: #f8f8f2;
+      outline: none;
+      font-size: 1em;
+    }
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background-color: #4d6bfe;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .chat-input button:hover {
+      background-color: #3b5cf8;
+    }
+  </style>
+  <!-- Importa o SDK do Firebase (modo compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="sidebar-header">CHAT</div>
+      <ul class="conversation-list" id="conversation-list"></ul>
+      <button id="new-chat-btn">Nova Conversa</button>
+    </div>
+    <div class="chat-area">
+      <div class="chat-header" id="chat-header">Selecione uma conversa</div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div id="typingIndicator"></div>
+      <div class="chat-input">
+        <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+        <button id="send-btn">Enviar</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 1. Inicialize o Firebase – substitua pelas suas credenciais!
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzv6YNzNbdGY_IP2kBtTJNjfdbDrURxN8",
+      authDomain: "simple-duck.firebaseapp.com",
+      databaseURL: "https://simple-duck-default-rtdb.firebaseio.com",
+      projectId: "simple-duck",
+      storageBucket: "simple-duck.firebasestorage.app",
+      messagingSenderId: "469692647079",
+      appId: "1:469692647079:web:577694159b63b291cdfd82",
+      measurementId: "G-SDDEGZ89KH"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // 2. Classe da aplicação de chat integrada com o Firebase
+    class ChatApp {
+      constructor() {
+        this.conversations = [];
+        this.currentConversation = null;
+        this.conversationCounter = 1;
+        this.MAX_CONVERSATIONS = 12;
+        // Referência para o listener das mensagens da conversa ativa
+        this.currentMessageListenerRef = null;
+        this.initElements();
+        this.initEventListeners();
+        this.loadConversationsFromFirebase();
+      }
+
+      initElements() {
+        this.conversationList = document.getElementById('conversation-list');
+        this.chatMessages = document.getElementById('chat-messages');
+        this.chatHeader = document.getElementById('chat-header');
+        this.messageInput = document.getElementById('message-input');
+        this.sendBtn = document.getElementById('send-btn');
+        this.newChatBtn = document.getElementById('new-chat-btn');
+        this.typingIndicator = document.getElementById('typingIndicator');
+      }
+
+      initEventListeners() {
+        this.sendBtn.addEventListener('click', () => this.handleSendMessage());
+        this.messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.handleSendMessage();
+          }
+          this.updateTypingStatus();
+        });
+        this.newChatBtn.addEventListener('click', () => this.createNewConversation());
+      }
+
+      // Lê as conversas do Firebase em tempo real
+      loadConversationsFromFirebase() {
+        const convRef = database.ref('conversations');
+        convRef.on('value', snapshot => {
+          const data = snapshot.val();
+          this.conversations = [];
+          if (data) {
+            for (let key in data) {
+              this.conversations.push(data[key]);
+            }
+          } else {
+            // Se não houver conversas, cria uma conversa inicial
+            this.createNewConversation('Conversa Inicial');
+            return;
+          }
+          // Se nenhuma conversa estiver ativa, seleciona a primeira
+          if (!this.currentConversation && this.conversations.length > 0) {
+            this.switchConversation(this.conversations[0].id);
+          } else if (this.currentConversation) {
+            // Atualiza a conversa ativa com os dados mais recentes
+            const updated = this.conversations.find(c => c.id === this.currentConversation.id);
+            if (updated) {
+              this.currentConversation = updated;
+            }
+            this.renderMessages();
+          }
+          this.renderConversations();
+        });
+      }
+
+      // Cria uma nova conversa e a grava no Firebase
+      createNewConversation(title = null) {
+        if (this.conversations.length >= this.MAX_CONVERSATIONS) {
+          alert('Limite máximo de 12 conversas atingido!');
+          return;
+        }
+        const newTitle = title || this.generateDefaultTitle();
+        const newConvRef = database.ref('conversations').push();
+        const newConversation = {
+          id: newConvRef.key,
+          title: newTitle,
+          // Inicialmente, as mensagens podem ser um objeto vazio
+          messages: {}
+        };
+        newConvRef.set(newConversation, (error) => {
+          if (error) {
+            console.error('Erro ao criar nova conversa:', error);
+          } else {
+            // Define a nova conversa como ativa e já adiciona o listener de mensagens
+            this.switchConversation(newConversation.id);
+          }
+        });
+      }
+
+      generateDefaultTitle() {
+        if (this.conversationCounter <= 11) {
+          return `Nova Conversa ${this.conversationCounter++}`;
+        }
+        return 'Nova Conversa 11';
+      }
+
+      // Renderiza a lista de conversas
+      renderConversations() {
+        this.conversationList.innerHTML = '';
+        this.conversations.forEach(conversation => {
+          const li = document.createElement('li');
+          li.className = `conversation ${conversation.id === this.currentConversation?.id ? 'active' : ''}`;
+          
+          // Título editável – duplo clique para editar
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'conversation-title';
+          titleSpan.textContent = conversation.title;
+          titleSpan.ondblclick = () => this.editConversationTitle(conversation, titleSpan);
+          
+          // Botão de exclusão
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.innerHTML = '×';
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.deleteConversation(conversation.id);
+          };
+
+          li.appendChild(titleSpan);
+          li.appendChild(deleteBtn);
+          li.onclick = () => this.switchConversation(conversation.id);
+          
+          this.conversationList.appendChild(li);
+        });
+        this.newChatBtn.disabled = this.conversations.length >= this.MAX_CONVERSATIONS;
+      }
+
+      // Permite editar o título da conversa e atualiza no Firebase
+      editConversationTitle(conversation, titleElement) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'title-input';
+        input.value = conversation.title;
+        
+        titleElement.replaceWith(input);
+        input.focus();
+
+        const saveTitle = () => {
+          const newTitle = input.value.trim();
+          if (newTitle && newTitle !== conversation.title) {
+            database.ref('conversations/' + conversation.id)
+              .update({ title: newTitle }, (error) => {
+                if (error) {
+                  console.error('Erro ao atualizar título:', error);
+                }
+              });
+          }
+        };
+
+        input.onkeypress = (e) => e.key === 'Enter' && saveTitle();
+        input.onblur = saveTitle;
+      }
+
+      // Adiciona uma mensagem à conversa no Firebase
+      addMessage(conversationId, type, text) {
+        const message = {
+          type,
+          text,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        const messagesRef = database.ref(`conversations/${conversationId}/messages`);
+        messagesRef.push(message, (error) => {
+          if (error) {
+            console.error('Erro ao adicionar mensagem:', error);
+          }
+        });
+      }
+
+      // Lida com o envio de mensagens (a resposta automática foi removida)
+      handleSendMessage() {
+        const text = this.messageInput.value.trim();
+        if (text && this.currentConversation) {
+          this.addMessage(this.currentConversation.id, 'sent', text);
+          this.messageInput.value = '';
+        }
+      }
+
+      // Atualiza a área de mensagens usando o objeto atual (currentConversation.messages)
+      renderMessages() {
+        this.chatMessages.innerHTML = '';
+        if (this.currentConversation && this.currentConversation.messages) {
+          const messagesObj = this.currentConversation.messages;
+          const messagesArray = Object.values(messagesObj);
+          messagesArray.forEach(msg => {
+            // Verifica se os campos necessários existem
+            if (msg && msg.text && msg.timestamp && msg.type) {
+              const div = document.createElement('div');
+              div.className = `message ${msg.type}`;
+              div.innerHTML = `
+                <div>${msg.text}</div>
+                <div class="timestamp">${msg.timestamp}</div>
+              `;
+              this.chatMessages.appendChild(div);
+            }
+          });
+          this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        }
+      }
+
+      // Troca a conversa ativa, atualiza o header, a lista e configura um listener para as mensagens
+      switchConversation(id) {
+        this.currentConversation = this.conversations.find(c => c.id === id);
+        // Remove o listener anterior (se houver)
+        if (this.currentMessageListenerRef) {
+          this.currentMessageListenerRef.off();
+        }
+        // Configura o listener para a subárvore de mensagens da conversa ativa
+        this.currentMessageListenerRef = database.ref(`conversations/${id}/messages`);
+        this.currentMessageListenerRef.on('value', snapshot => {
+          const messages = snapshot.val();
+          // Atualiza a conversa ativa com as mensagens recebidas
+          if (this.currentConversation) {
+            this.currentConversation.messages = messages;
+            this.renderMessages();
+          }
+        });
+        this.updateChatHeader();
+        this.renderConversations();
+      }
+
+      // Remove a conversa do Firebase
+      deleteConversation(id) {
+        database.ref('conversations/' + id).remove((error) => {
+          if (error) {
+            console.error('Erro ao excluir conversa:', error);
+          } else {
+            if (this.currentConversation?.id === id) {
+              // Se a conversa ativa foi deletada, seleciona outra (se existir)
+              this.currentConversation = this.conversations.find(c => c.id !== id) || null;
+              this.renderMessages();
+              this.updateChatHeader();
+            }
+            this.renderConversations();
+          }
+        });
+      }
+
+      updateChatHeader() {
+        this.chatHeader.textContent = this.currentConversation?.title || 'Selecione uma conversa';
+      }
+
+      // Função de indicador de digitação
+      updateTypingStatus() {
+        if (this.messageInput.value.trim() === '') {
+          if (this.typingTimeout) clearTimeout(this.typingTimeout);
+          database.ref('typing/' + this.currentUserId).remove();
+          return;
+        }
+        // Seta o status "digitando" no Firebase
+        database.ref('typing/' + this.currentUserId).set({
+          username: this.currentUsername
+        });
+        if (this.typingTimeout) clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => {
+          database.ref('typing/' + this.currentUserId).remove();
+        }, 1000);
+      }
+
+      // Listener para exibir quais usuários estão digitando (exceto o atual)
+      setupTypingListener() {
+        database.ref('typing').on('value', snapshot => {
+          let typingUsers = [];
+          snapshot.forEach(childSnapshot => {
+            if (childSnapshot.key !== this.currentUserId) {
+              const user = childSnapshot.val();
+              typingUsers.push(user.username);
+            }
+          });
+          if (typingUsers.length > 0) {
+            this.typingIndicator.textContent = typingUsers.join(", ") + (typingUsers.length === 1 ? " está digitando..." : " estão digitando...");
+          } else {
+            this.typingIndicator.textContent = "";
+          }
+        });
+      }
+    }
+
+    // 3. Inicializa a aplicação
+    const chatApp = new ChatApp();
+    chatApp.setupTypingListener();
+  </script>
+</body>
+</html>
