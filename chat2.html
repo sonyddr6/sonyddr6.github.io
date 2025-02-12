@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat Interface</title>
+  <title>Chat com Presença e Nome de Usuário</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* Estilos básicos e de layout */
+    /* Reset e estilos básicos */
     * {
       margin: 0;
       padding: 0;
@@ -20,16 +20,82 @@
       background-color: #1e1e1e;
       color: #f8f8f2;
     }
+    /* Modal de login */
+    #login-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(30, 30, 30, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #login-modal input, #login-modal button {
+      padding: 10px;
+      font-size: 1em;
+      margin: 5px;
+    }
+    /* Estilo específico para o modal de login */
+    #login-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(30, 30, 30, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    /* Estilização do input para "Digite seu nome" */
+    #login-modal input {
+      width: 300px;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      border: 2px solid #4d6bfe;
+      border-radius: 5px;
+      background-color: #2d2d2d;
+      color: #f8f8f2;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    #login-modal input:focus {
+      border-color: #3b5cf8;
+    }
+    /* Estilização do botão de entrada */
+    #login-modal button {
+      padding: 12px 20px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #4d6bfe;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #login-modal button:hover {
+      background-color: #3b5cf8;
+    }
+    /* Container principal (chat) – inicialmente oculto */
     .container {
       display: flex;
       height: 100vh;
       overflow: hidden;
+      display: none; /* Será exibido após o login */
     }
     .sidebar {
       width: 300px;
       background-color: #2d2d2d;
       display: flex;
       flex-direction: column;
+      padding: 10px;
     }
     .sidebar-header {
       padding: 20px;
@@ -38,47 +104,41 @@
       font-size: 1.5em;
       font-weight: 500;
     }
+    /* Área para exibir usuários online */
+    #online-users {
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+    .user-status {
+      display: flex;
+      align-items: center;
+      margin: 3px 0;
+    }
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #4d6bfe;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
     .conversation-list {
       list-style: none;
       flex: 1;
       overflow-y: auto;
+      margin-top: 10px;
     }
     .conversation {
       padding: 10px 15px;
       border-bottom: 1px solid #444;
       cursor: pointer;
       transition: background-color 0.2s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     .conversation:hover,
     .conversation.active {
       background-color: #3a3a3a;
     }
-    .conversation-title {
-      flex: 1;
-      padding-right: 10px;
-      cursor: pointer;
-    }
-    .title-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: #f8f8f2;
-      font-family: 'Roboto Mono', monospace;
-      padding: 2px 5px;
-      border-bottom: 1px solid #4d6bfe;
-    }
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #ff5555;
-      cursor: pointer;
-      padding: 5px;
-    }
     #new-chat-btn {
-      margin: 20px;
+      margin: 10px;
       padding: 10px;
       background-color: #4d6bfe;
       border: none;
@@ -115,11 +175,11 @@
       max-width: 60%;
       word-wrap: break-word;
     }
-    .message.sent {
+    .message.user {
       background-color: #4d6bfe;
       margin-left: auto;
     }
-    .message.received {
+    .message.other {
       background-color: #3a3a3a;
     }
     .timestamp {
@@ -163,318 +223,207 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
+  <!-- Modal de Login -->
+  <div id="login-modal">
+    <input type="text" id="username-input" placeholder="Digite seu nome">
+    <button id="enter-chat">Entrar no Chat</button>
+  </div>
+
+  <!-- Container principal do Chat -->
   <div class="container">
     <div class="sidebar">
       <div class="sidebar-header">CHAT</div>
-      <ul class="conversation-list" id="conversation-list"></ul>
+      <!-- Área de usuários online -->
+      <div id="online-users"></div>
+      <ul class="conversation-list" id="conversation-list">
+        <!-- Se desejar, pode criar conversas (ou salas) pré-definidas -->
+      </ul>
       <button id="new-chat-btn">Nova Conversa</button>
     </div>
     <div class="chat-area">
       <div class="chat-header" id="chat-header">Selecione uma conversa</div>
       <div class="chat-messages" id="chat-messages"></div>
-      <div id="typingIndicator"></div>
       <div class="chat-input">
         <input type="text" id="message-input" placeholder="Digite sua mensagem...">
         <button id="send-btn">Enviar</button>
       </div>
     </div>
   </div>
+
   <script>
-    // 1. Inicialize o Firebase – substitua pelas suas credenciais!
+    /**************** CONFIGURAÇÃO DO FIREBASE ****************/
     const firebaseConfig = {
-      apiKey: "AIzaSyAzv6YNzNbdGY_IP2kBtTJNjfdbDrURxN8",
-      authDomain: "simple-duck.firebaseapp.com",
-      databaseURL: "https://simple-duck-default-rtdb.firebaseio.com",
-      projectId: "simple-duck",
-      storageBucket: "simple-duck.firebasestorage.app",
-      messagingSenderId: "469692647079",
-      appId: "1:469692647079:web:577694159b63b291cdfd82",
-      measurementId: "G-SDDEGZ89KH"
+      apiKey: "AIzaSyBKCSa5ajS4Ffsb9zRoDbGoKdM-v6QgSG8",
+      authDomain: "meuchatapp-f6f2d.firebaseapp.com",
+      projectId: "meuchatapp-f6f2d",
+      storageBucket: "meuchatapp-f6f2d.firebasestorage.app",
+      messagingSenderId: "715047208925",
+      appId: "1:715047208925:web:0087d905ee99e32354d834",
+      measurementId: "G-2D2BPMSYRC"
     };
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.database();
 
-    // 2. Classe da aplicação de chat integrada com o Firebase
-    class ChatApp {
-      constructor() {
-        this.conversations = [];
-        this.currentConversation = null;
-        this.conversationCounter = 1;
-        this.MAX_CONVERSATIONS = 12;
-        // Referência para o listener das mensagens da conversa ativa
-        this.currentMessageListenerRef = null;
-        this.initElements();
-        this.initEventListeners();
-        this.loadConversationsFromFirebase();
-      }
+    /**************** ELEMENTOS DA INTERFACE ****************/
+    const elements = {
+      loginModal: document.getElementById('login-modal'),
+      usernameInput: document.getElementById('username-input'),
+      enterChat: document.getElementById('enter-chat'),
+      container: document.querySelector('.container'),
+      conversationList: document.getElementById('conversation-list'),
+      chatMessages: document.getElementById('chat-messages'),
+      chatHeader: document.getElementById('chat-header'),
+      messageInput: document.getElementById('message-input'),
+      sendButton: document.getElementById('send-btn'),
+      newChatBtn: document.getElementById('new-chat-btn'),
+      onlineUsers: document.getElementById('online-users')
+    };
 
-      initElements() {
-        this.conversationList = document.getElementById('conversation-list');
-        this.chatMessages = document.getElementById('chat-messages');
-        this.chatHeader = document.getElementById('chat-header');
-        this.messageInput = document.getElementById('message-input');
-        this.sendBtn = document.getElementById('send-btn');
-        this.newChatBtn = document.getElementById('new-chat-btn');
-        this.typingIndicator = document.getElementById('typingIndicator');
-      }
+    /**************** VARIÁVEIS GLOBAIS ****************/
+    // Estado do usuário e da sala atual
+    let currentUser = {
+      id: '',
+      name: '',
+      isTyping: false,
+      lastTypingTimeout: null
+    };
+    let currentChat = "defaultChat"; // Identificador da sala (pode ser alterado conforme sua lógica)
+    // Referências para listeners (para permitir desligá-los ao trocar de sala)
+    let messagesRef = null;
+    let usersRef = null;
 
-      initEventListeners() {
-        this.sendBtn.addEventListener('click', () => this.handleSendMessage());
-        this.messageInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            this.handleSendMessage();
-          }
-          this.updateTypingStatus();
-        });
-        this.newChatBtn.addEventListener('click', () => this.createNewConversation());
-      }
+    /**************** FUNÇÕES DE GERENCIAMENTO DE USUÁRIO ****************/
+    // Registra o usuário na sala atual e gerencia sua presença online
+    function initUserForChat() {
+      currentUser.id = currentUser.id || Math.random().toString(36).substr(2, 9);
+      const userRef = db.ref(`chats/${currentChat}/users/${currentUser.id}`);
+      userRef.set({
+        name: currentUser.name,
+        online: true,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+      // Ao desconectar, atualiza o status para offline
+      userRef.onDisconnect().update({
+        online: false,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+    }
 
-      // Lê as conversas do Firebase em tempo real
-      loadConversationsFromFirebase() {
-        const convRef = database.ref('conversations');
-        convRef.on('value', snapshot => {
-          const data = snapshot.val();
-          this.conversations = [];
-          if (data) {
-            for (let key in data) {
-              this.conversations.push(data[key]);
-            }
-          } else {
-            // Se não houver conversas, cria uma conversa inicial
-            this.createNewConversation('Conversa Inicial');
-            return;
-          }
-          // Se nenhuma conversa estiver ativa, seleciona a primeira
-          if (!this.currentConversation && this.conversations.length > 0) {
-            this.switchConversation(this.conversations[0].id);
-          } else if (this.currentConversation) {
-            // Atualiza a conversa ativa com os dados mais recentes
-            const updated = this.conversations.find(c => c.id === this.currentConversation.id);
-            if (updated) {
-              this.currentConversation = updated;
-            }
-            this.renderMessages();
-          }
-          this.renderConversations();
-        });
-      }
-
-      // Cria uma nova conversa e a grava no Firebase
-      createNewConversation(title = null) {
-        if (this.conversations.length >= this.MAX_CONVERSATIONS) {
-          alert('Limite máximo de 12 conversas atingido!');
-          return;
+    /**************** LISTENERS PARA A SALA ****************/
+    // Configura listeners para mensagens e para usuários online na sala atual
+    function setupListenersForChat() {
+      // Mensagens
+      if (messagesRef) messagesRef.off();
+      messagesRef = db.ref(`chats/${currentChat}/messages`);
+      messagesRef.orderByChild('timestamp').on('child_added', snapshot => {
+        const message = snapshot.val();
+        if (message.status === 'active') {
+          elements.chatMessages.appendChild(createMessageElement(snapshot.key, message));
+          elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
         }
-        const newTitle = title || this.generateDefaultTitle();
-        const newConvRef = database.ref('conversations').push();
-        const newConversation = {
-          id: newConvRef.key,
-          title: newTitle,
-          // Inicialmente, as mensagens podem ser um objeto vazio
-          messages: {}
-        };
-        newConvRef.set(newConversation, (error) => {
-          if (error) {
-            console.error('Erro ao criar nova conversa:', error);
-          } else {
-            // Define a nova conversa como ativa e já adiciona o listener de mensagens
-            this.switchConversation(newConversation.id);
-          }
+      });
+      // Usuários online
+      if (usersRef) usersRef.off();
+      usersRef = db.ref(`chats/${currentChat}/users`);
+      usersRef.orderByChild('online').equalTo(true).on('value', snapshot => {
+        const users = snapshot.val() || {};
+        const totalOnline = Object.keys(users).length;
+        let listHTML = `<strong>Usuários Online (${totalOnline}):</strong>`;
+        Object.values(users).forEach(user => {
+          listHTML += `
+            <div class="user-status">
+              <div class="online-dot"></div>
+              ${user.name} ${user.isTyping ? '<span style="font-size:0.8em; font-style:italic;">(digitando...)</span>' : ''}
+            </div>
+          `;
         });
-      }
+        elements.onlineUsers.innerHTML = listHTML;
+      });
+    }
 
-      generateDefaultTitle() {
-        if (this.conversationCounter <= 11) {
-          return `Nova Conversa ${this.conversationCounter++}`;
-        }
-        return 'Nova Conversa 11';
-      }
+    /**************** FUNÇÕES DE ENVIO E CRIAÇÃO DE MENSAGENS ****************/
+    // Cria um elemento HTML para a mensagem
+    function createMessageElement(messageId, message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${message.userId === currentUser.id ? 'user' : 'other'}`;
+      
+      const time = new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      messageDiv.innerHTML = `
+        <div class="message-header">
+          <span>${message.user}</span>
+          <span>${time}</span>
+        </div>
+        <div class="message-body">${message.text}</div>
+      `;
+      return messageDiv;
+    }
 
-      // Renderiza a lista de conversas
-      renderConversations() {
-        this.conversationList.innerHTML = '';
-        this.conversations.forEach(conversation => {
-          const li = document.createElement('li');
-          li.className = `conversation ${conversation.id === this.currentConversation?.id ? 'active' : ''}`;
-          
-          // Título editável – duplo clique para editar
-          const titleSpan = document.createElement('span');
-          titleSpan.className = 'conversation-title';
-          titleSpan.textContent = conversation.title;
-          titleSpan.ondblclick = () => this.editConversationTitle(conversation, titleSpan);
-          
-          // Botão de exclusão
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'delete-btn';
-          deleteBtn.innerHTML = '×';
-          deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            this.deleteConversation(conversation.id);
-          };
-
-          li.appendChild(titleSpan);
-          li.appendChild(deleteBtn);
-          li.onclick = () => this.switchConversation(conversation.id);
-          
-          this.conversationList.appendChild(li);
+    // Envia a mensagem para a sala atual
+    function sendMessage() {
+      const messageText = elements.messageInput.value.trim();
+      if (messageText && currentUser.name) {
+        db.ref(`chats/${currentChat}/messages`).push({
+          text: messageText,
+          user: currentUser.name,
+          userId: currentUser.id,
+          timestamp: Date.now(),
+          status: 'active'
         });
-        this.newChatBtn.disabled = this.conversations.length >= this.MAX_CONVERSATIONS;
-      }
-
-      // Permite editar o título da conversa e atualiza no Firebase
-      editConversationTitle(conversation, titleElement) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'title-input';
-        input.value = conversation.title;
-        
-        titleElement.replaceWith(input);
-        input.focus();
-
-        const saveTitle = () => {
-          const newTitle = input.value.trim();
-          if (newTitle && newTitle !== conversation.title) {
-            database.ref('conversations/' + conversation.id)
-              .update({ title: newTitle }, (error) => {
-                if (error) {
-                  console.error('Erro ao atualizar título:', error);
-                }
-              });
-          }
-        };
-
-        input.onkeypress = (e) => e.key === 'Enter' && saveTitle();
-        input.onblur = saveTitle;
-      }
-
-      // Adiciona uma mensagem à conversa no Firebase
-      addMessage(conversationId, type, text) {
-        const message = {
-          type,
-          text,
-          timestamp: new Date().toLocaleTimeString()
-        };
-        const messagesRef = database.ref(`conversations/${conversationId}/messages`);
-        messagesRef.push(message, (error) => {
-          if (error) {
-            console.error('Erro ao adicionar mensagem:', error);
-          }
-        });
-      }
-
-      // Lida com o envio de mensagens (a resposta automática foi removida)
-      handleSendMessage() {
-        const text = this.messageInput.value.trim();
-        if (text && this.currentConversation) {
-          this.addMessage(this.currentConversation.id, 'sent', text);
-          this.messageInput.value = '';
-        }
-      }
-
-      // Atualiza a área de mensagens usando o objeto atual (currentConversation.messages)
-      renderMessages() {
-        this.chatMessages.innerHTML = '';
-        if (this.currentConversation && this.currentConversation.messages) {
-          const messagesObj = this.currentConversation.messages;
-          const messagesArray = Object.values(messagesObj);
-          messagesArray.forEach(msg => {
-            // Verifica se os campos necessários existem
-            if (msg && msg.text && msg.timestamp && msg.type) {
-              const div = document.createElement('div');
-              div.className = `message ${msg.type}`;
-              div.innerHTML = `
-                <div>${msg.text}</div>
-                <div class="timestamp">${msg.timestamp}</div>
-              `;
-              this.chatMessages.appendChild(div);
-            }
-          });
-          this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-        }
-      }
-
-      // Troca a conversa ativa, atualiza o header, a lista e configura um listener para as mensagens
-      switchConversation(id) {
-        this.currentConversation = this.conversations.find(c => c.id === id);
-        // Remove o listener anterior (se houver)
-        if (this.currentMessageListenerRef) {
-          this.currentMessageListenerRef.off();
-        }
-        // Configura o listener para a subárvore de mensagens da conversa ativa
-        this.currentMessageListenerRef = database.ref(`conversations/${id}/messages`);
-        this.currentMessageListenerRef.on('value', snapshot => {
-          const messages = snapshot.val();
-          // Atualiza a conversa ativa com as mensagens recebidas
-          if (this.currentConversation) {
-            this.currentConversation.messages = messages;
-            this.renderMessages();
-          }
-        });
-        this.updateChatHeader();
-        this.renderConversations();
-      }
-
-      // Remove a conversa do Firebase
-      deleteConversation(id) {
-        database.ref('conversations/' + id).remove((error) => {
-          if (error) {
-            console.error('Erro ao excluir conversa:', error);
-          } else {
-            if (this.currentConversation?.id === id) {
-              // Se a conversa ativa foi deletada, seleciona outra (se existir)
-              this.currentConversation = this.conversations.find(c => c.id !== id) || null;
-              this.renderMessages();
-              this.updateChatHeader();
-            }
-            this.renderConversations();
-          }
-        });
-      }
-
-      updateChatHeader() {
-        this.chatHeader.textContent = this.currentConversation?.title || 'Selecione uma conversa';
-      }
-
-      // Função de indicador de digitação
-      updateTypingStatus() {
-        if (this.messageInput.value.trim() === '') {
-          if (this.typingTimeout) clearTimeout(this.typingTimeout);
-          database.ref('typing/' + this.currentUserId).remove();
-          return;
-        }
-        // Seta o status "digitando" no Firebase
-        database.ref('typing/' + this.currentUserId).set({
-          username: this.currentUsername
-        });
-        if (this.typingTimeout) clearTimeout(this.typingTimeout);
-        this.typingTimeout = setTimeout(() => {
-          database.ref('typing/' + this.currentUserId).remove();
-        }, 1000);
-      }
-
-      // Listener para exibir quais usuários estão digitando (exceto o atual)
-      setupTypingListener() {
-        database.ref('typing').on('value', snapshot => {
-          let typingUsers = [];
-          snapshot.forEach(childSnapshot => {
-            if (childSnapshot.key !== this.currentUserId) {
-              const user = childSnapshot.val();
-              typingUsers.push(user.username);
-            }
-          });
-          if (typingUsers.length > 0) {
-            this.typingIndicator.textContent = typingUsers.join(", ") + (typingUsers.length === 1 ? " está digitando..." : " estão digitando...");
-          } else {
-            this.typingIndicator.textContent = "";
-          }
-        });
+        elements.messageInput.value = '';
       }
     }
 
-    // 3. Inicializa a aplicação
-    const chatApp = new ChatApp();
-    chatApp.setupTypingListener();
+    /**************** FUNÇÃO DE INDICADOR DE DIGITAÇÃO ****************/
+    function updateTypingStatus() {
+      db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: true });
+      clearTimeout(currentUser.lastTypingTimeout);
+      currentUser.lastTypingTimeout = setTimeout(() => {
+        db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: false });
+      }, 1500);
+    }
+
+    /**************** EVENTOS ****************/
+    // Ao clicar para entrar no chat, registra o usuário e exibe a interface principal
+    elements.enterChat.addEventListener('click', () => {
+      const name = elements.usernameInput.value.trim();
+      if (name) {
+        currentUser.name = name;
+        // Esconde o modal de login e exibe o chat
+        elements.loginModal.style.display = 'none';
+        elements.container.style.display = 'flex';
+        initUserForChat();
+        setupListenersForChat();
+      }
+    });
+
+    // Envia a mensagem ao clicar no botão ou pressionar Enter
+    elements.sendButton.addEventListener('click', sendMessage);
+    elements.messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+      updateTypingStatus();
+    });
+
+    /**************** EVENTO PARA ENTRAR NO CHAT ****************/
+    // Exibe a interface de chat somente após o login
+    elements.enterChat.addEventListener('click', () => {
+      const name = elements.usernameInput.value.trim();
+      if (name) {
+        currentUser.name = name;
+        elements.loginModal.style.display = 'none';
+        elements.container.style.display = 'flex';
+        initUserForChat();
+        setupListenersForChat();
+      }
+    });
   </script>
 </body>
 </html>
