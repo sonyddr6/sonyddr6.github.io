@@ -333,6 +333,20 @@
     // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
 
+// Carregar os dados do Firebase ao iniciar a aplicação
+window.onload = function() {
+  firebase.database().ref('listas').once('value')
+    .then((snapshot) => {
+      const dados = snapshot.val();
+      if (dados) {
+        window.listas = dados;
+        window.atualizarListas();
+      }
+    })
+    .catch((error) => {
+      console.error('Erro ao carregar os dados do Firebase:', error);
+    });
+};
     // Função para salvar os dados no Firebase Realtime Database
     function salvarDadosFirebase() {
       firebase.database().ref('listas').set(window.listas)
