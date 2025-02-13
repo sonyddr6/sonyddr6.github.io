@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Listas de Compras</title>
+     <style>
+        :root {
+            --primary-color: #7c4dff;
+            --primary-hover: #651fff;
+            --background: #121212;
+            --surface: #1e1e1e;
+            --surface-light: #2c2c2c;
+            --text: #ffffff;
+            --text-secondary: #b3b3b3;
+            --error: #cf6679;
+            --success: #03dac6;
+            --spacing-unit: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-unit);
+        }
+
+        h1, h2 {
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .lista-item {
+            background-color: var(--surface);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--surface-light);
+        }
+
+        .botoes {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--text);
+            border: none;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+            min-width: 80px;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .form-nova-lista {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background-color: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--surface-light);
+        }
+
+        input {
+            background-color: var(--surface-light);
+            border: 1px solid var(--surface-light);
+            color: var(--text);
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 0;
+            font-size: 0.9rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .oculto {
+            display: none;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--surface-light);
+            background-color: var(--surface);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 300px;
+        }
+
+        th, td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--surface-light);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: var(--surface-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Alinhamento dos valores numéricos */
+        td:nth-child(2),
+        td:nth-child(3),
+        td:nth-child(4),
+        th:nth-child(2),
+        th:nth-child(3),
+        th:nth-child(4) {
+            text-align: right;
+        }
+
+        tbody tr:hover {
+            background-color: var(--surface-light);
+        }
+
+        tfoot {
+            background-color: var(--surface-light);
+            font-weight: 600;
+        }
+
+        tfoot td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        #formItem {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            background-color: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--surface-light);
+        }
+
+        .voltar {
+            margin-top: 1.5rem;
+            background-color: var(--surface-light);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.75rem;
+            }
+
+            .lista-item {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+                padding: 0.75rem;
+            }
+
+            .botoes {
+                width: 100%;
+                justify-content: center;
+            }
+
+            button {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .form-nova-lista {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            #formItem {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            th, td {
+                padding: 0.5rem 0.4rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .lista-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .form-nova-lista {
+                flex-wrap: nowrap;
+            }
+
+            #formItem {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #listasContainer > div {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+  <style>
+    /* [Seu CSS permanece inalterado] */
+    :root {
+      --primary-color: #7c4dff;
+      --primary-hover: #651fff;
+      --background: #121212;
+      --surface: #1e1e1e;
+      --surface-light: #2c2c2c;
+      --text: #ffffff;
+      --text-secondary: #b3b3b3;
+      --error: #cf6679;
+      --success: #03dac6;
+      --spacing-unit: 1rem;
+    }
+    /* ... restante do CSS ... */
+  </style>
+  <!-- Inclua os scripts do Firebase (versão 8) -->
+  <!-- Firebase App (o núcleo) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <!-- Firebase Realtime Database -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Minhas Listas</h1>
+
+    <form id="formNovaLista" class="form-nova-lista">
+      <input type="text" id="nomeLista" placeholder="Nome da Lista" required>
+      <button type="submit">Criar Lista</button>
+    </form>
+
+    <div id="listasContainer"></div>
+
+    <div id="telaListaCompras" class="oculto">
+      <h2 id="nomeListaAtual"></h2>
+      <div class="table-container">
+        <table id="tabelaCompras">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Qtd</th>
+              <th>Preço</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"><strong>Total:</strong></td>
+              <td id="totalGeral">R$ 0,00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <form id="formItem">
+        <input type="text" id="produto" placeholder="Produto" required>
+        <input type="number" id="quantidade" placeholder="Quantidade" required>
+        <input type="number" step="0.01" id="precoUnitario" placeholder="Preço" required>
+        <button type="submit">Adicionar</button>
+      </form>
+
+      <button onclick="voltarParaListas()" class="voltar">Voltar às Listas</button>
+    </div>
+  </div>
+
+  <script>
+    // Configuração do Firebase (já fornecida)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-9ggPSZcCLNGeYEisuxaKApglh6Rz7tc",
+      authDomain: "listduckbuy.firebaseapp.com",
+      databaseURL: "https://listduckbuy-default-rtdb.firebaseio.com",
+      projectId: "listduckbuy",
+      storageBucket: "listduckbuy.firebasestorage.app",
+      messagingSenderId: "999769899268",
+      appId: "1:999769899268:web:626283c89d66cef2571051",
+      measurementId: "G-3Q6J376DPW"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Função para salvar os dados no Firebase Realtime Database
+    function salvarDadosFirebase() {
+      firebase.database().ref('listas').set(window.listas)
+        .then(() => {
+          console.log('Dados salvos com sucesso no Firebase!');
+        })
+        .catch((error) => {
+          console.error('Erro ao salvar os dados no Firebase:', error);
+        });
+    }
+
+    // Variáveis globais
+    window.listas = [];
+    window.listaAtual = null;
+
+    window.abrirLista = function(index) {
+      window.listaAtual = index;
+      document.getElementById('nomeListaAtual').textContent = window.listas[index].nome;
+      document.getElementById('listasContainer').classList.add('oculto');
+      document.getElementById('formNovaLista').classList.add('oculto');
+      document.getElementById('telaListaCompras').classList.remove('oculto');
+      window.atualizarItensLista();
+    };
+
+    window.voltarParaListas = function() {
+      window.listaAtual = null;
+      document.getElementById('listasContainer').classList.remove('oculto');
+      document.getElementById('formNovaLista').classList.remove('oculto');
+      document.getElementById('telaListaCompras').classList.add('oculto');
+    };
+
+    window.excluirLista = function(index) {
+      if (confirm('Tem certeza que deseja excluir esta lista?')) {
+        window.listas.splice(index, 1);
+        window.atualizarListas();
+      }
+    };
+
+    window.moverCima = function(index) {
+      if (index > 0) {
+        [window.listas[index], window.listas[index - 1]] = [window.listas[index - 1], window.listas[index]];
+        window.atualizarListas();
+      }
+    };
+
+    window.moverBaixo = function(index) {
+      if (index < window.listas.length - 1) {
+        [window.listas[index], window.listas[index + 1]] = [window.listas[index + 1], window.listas[index]];
+        window.atualizarListas();
+      }
+    };
+
+    window.atualizarListas = function() {
+      const container = document.getElementById('listasContainer');
+      container.innerHTML = '';
+
+      window.listas.forEach((lista, index) => {
+        const div = document.createElement('div');
+        div.className = 'lista-item';
+        div.innerHTML = `
+          <span>${lista.nome}</span>
+          <div class="botoes">
+            <button onclick="abrirLista(${index})">Abrir</button>
+            <button onclick="moverCima(${index})">↑</button>
+            <button onclick="moverBaixo(${index})">↓</button>
+            <button onclick="excluirLista(${index})">Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      // Salva as alterações no Firebase sempre que as listas são atualizadas
+      salvarDadosFirebase();
+    };
+
+    window.atualizarItensLista = function() {
+      const tbody = document.querySelector('#tabelaCompras tbody');
+      tbody.innerHTML = '';
+
+      let totalGeral = 0;
+
+      window.listas[window.listaAtual].itens.forEach((item) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.produto}</td>
+          <td>${item.quantidade}</td>
+          <td>R$ ${item.precoUnitario.toFixed(2)}</td>
+          <td>R$ ${item.total.toFixed(2)}</td>
+        `;
+        totalGeral += item.total;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('totalGeral').textContent = `R$ ${totalGeral.toFixed(2)}`;
+      // Opcional: também podemos salvar as alterações dos itens
+      salvarDadosFirebase();
+    };
+
+    document.getElementById('formNovaLista').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nomeLista = document.getElementById('nomeLista').value;
+      // Cria nova lista com um array vazio de itens
+      window.listas.push({ nome: nomeLista, itens: [] });
+      window.atualizarListas();
+      document.getElementById('nomeLista').value = '';
+    });
+
+    document.getElementById('formItem').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const produto = document.getElementById('produto').value;
+      const quantidade = parseInt(document.getElementById('quantidade').value);
+      const precoUnitario = parseFloat(document.getElementById('precoUnitario').value);
+      const total = quantidade * precoUnitario;
+
+      window.listas[window.listaAtual].itens.push({ produto, quantidade, precoUnitario, total });
+      window.atualizarItensLista();
+
+      document.getElementById('formItem').reset();
+    });
+  </script>
+</body>
+</html>
