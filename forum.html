@@ -31,6 +31,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .user-info {
@@ -44,6 +47,8 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            position: sticky;
+            top: 80px;
         }
 
         .topics-container {
@@ -120,6 +125,7 @@
             border-radius: 8px;
             width: 90%;
             max-width: 500px;
+            position: relative;
         }
 
         button {
@@ -129,10 +135,16 @@
             background: #007bff;
             color: white;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         button:hover {
             background: #0056b3;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
         }
 
         textarea {
@@ -142,6 +154,15 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
         .back-to-chat {
@@ -150,6 +171,27 @@
 
         .back-to-chat:hover {
             background: #218838;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 2000;
         }
 
         @media (max-width: 768px) {
@@ -161,11 +203,43 @@
                 flex-direction: column;
                 gap: 10px;
                 text-align: center;
+                position: relative;
+            }
+
+            .online-users {
+                position: relative;
+                top: 0;
+            }
+
+            .post-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .post-actions {
+                justify-content: flex-start;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10px;
             }
         }
     </style>
 </head>
 <body>
+    <div id="login-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2>Bem-vindo ao Fórum</h2>
+            <input type="text" id="username-input" placeholder="Digite seu nome">
+            <button onclick="login()">Entrar</button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        Carregando...
+    </div>
+
     <div class="header">
         <h1>Fórum de Ajuda</h1>
         <div class="user-info">
@@ -204,25 +278,23 @@
         </div>
     </div>
 
-    <!-- Modal de Nova Postagem -->
     <div id="post-modal" class="modal">
         <div class="modal-content">
             <h2>Nova Postagem</h2>
-            <input type="text" id="post-title" placeholder="Título" style="width: 100%; padding: 8px; margin: 10px 0;">
-            <textarea id="post-content" placeholder="Conteúdo" rows="5"></textarea>
+            <input type="text" id="post-title" placeholder="Título">
+            <textarea id="post-content" placeholder="Conteúdo"></textarea>
             <button onclick="submitPost()">Publicar</button>
-            <button onclick="closeModal('post-modal')" style="background: #dc3545;">Cancelar</button>
+            <button onclick="closeModal('post-modal')" class="delete-btn">Cancelar</button>
         </div>
     </div>
 
-    <!-- Modal de Edição -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>Editar Postagem</h2>
-            <input type="text" id="edit-title" placeholder="Título" style="width: 100%; padding: 8px; margin: 10px 0;">
-            <textarea id="edit-content" placeholder="Conteúdo" rows="5"></textarea>
+            <input type="text" id="edit-title" placeholder="Título">
+            <textarea id="edit-content" placeholder="Conteúdo"></textarea>
             <button onclick="submitEdit()">Salvar</button>
-            <button onclick="closeModal('edit-modal')" style="background: #dc3545;">Cancelar</button>
+            <button onclick="closeModal('edit-modal')" class="delete-btn">Cancelar</button>
         </div>
     </div>
 
@@ -253,23 +325,37 @@
         let currentTopic = null;
         let currentEditId = null;
 
-        // Inicialização
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function login() {
+            const username = document.getElementById('username-input').value.trim();
+            if (username) {
+                showLoading();
+                currentUser.name = username;
+                localStorage.setItem('userId', currentUser.id);
+                localStorage.setItem('userName', username);
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('user-name').textContent = `Olá, ${username}`;
+                initializePresence();
+                showPosts('tech');
+                hideLoading();
+            }
+        }
+
         window.onload = function() {
             if (!currentUser.name) {
-                const userName = prompt('Digite seu nome para entrar no fórum:');
-                if (userName) {
-                    currentUser.name = userName;
-                    localStorage.setItem('userId', currentUser.id);
-                    localStorage.setItem('userName', userName);
-                } else {
-                    window.location.href = 'index.html';
-                    return;
-                }
+                document.getElementById('login-modal').style.display = 'flex';
+            } else {
+                document.getElementById('user-name').textContent = `Olá, ${currentUser.name}`;
+                initializePresence();
+                showPosts('tech');
             }
-
-            document.getElementById('user-name').textContent = `Olá, ${currentUser.name}`;
-            initializePresence();
-            showPosts('tech'); // Carrega posts de tecnologia por padrão
         };
 
         function initializePresence() {
@@ -287,19 +373,35 @@
                 const users = snapshot.val() || {};
                 updateOnlineUsers(users);
             });
+
+            // Atualizar status a cada 30 segundos
+            setInterval(() => {
+                userRef.update({
+                    lastActivity: Date.now()
+                });
+            }, 30000);
         }
 
         function updateOnlineUsers(users) {
             const usersList = document.getElementById('users-list');
             usersList.innerHTML = '';
-            Object.values(users).forEach(user => {
+
+            const activeUsers = Object.values(users).filter(user => {
+                return Date.now() - user.lastActivity < 60000; // 1 minuto
+            });
+
+            activeUsers.forEach(user => {
                 const userElement = document.createElement('div');
-                userElement.textContent = user.name;
+                userElement.style.padding = '5px 0';
+                userElement.innerHTML = `
+                    <span style="color: #28a745;">●</span> ${user.name}
+                `;
                 usersList.appendChild(userElement);
             });
         }
 
         function showPosts(topic) {
+            showLoading();
             currentTopic = topic;
             const postsArea = document.getElementById('posts-area');
             postsArea.innerHTML = `
@@ -322,15 +424,15 @@
                         <div class="post-header">
                             <h3>${post.title}</h3>
                             <div class="post-actions">
-                                ${post.userId === currentUser.id ? `
-                                    <button onclick="editPost('${id}', '${post.title}', '${post.content}')">Editar</button>
-                                    <button onclick="deletePost('${id}')" style="background: #dc3545;">Excluir</button>
+                                ${post.userName === currentUser.name ? `
+                                    <button onclick="editPost('${id}', '${post.title}', '${post.content}', '${post.userName}')">Editar</button>
+                                    <button onclick="deletePost('${id}', '${post.userName}')" class="delete-btn">Excluir</button>
                                 ` : ''}
                                 <button onclick="toggleComments('${id}')">Comentários</button>
                             </div>
                         </div>
                         <p>${post.content}</p>
-                        <small>Por: ${post.userName}</small>
+                        <small>Por: ${post.userName} - ${new Date(post.timestamp).toLocaleString()}</small>
                         <div id="comments-${id}" class="comments" style="display: none;">
                             <div id="comments-list-${id}"></div>
                             <textarea id="comment-input-${id}" placeholder="Adicione um comentário"></textarea>
@@ -339,15 +441,21 @@
                     `;
                     postsList.appendChild(postElement);
                 });
+                hideLoading();
             });
         }
 
         function openPostModal() {
             document.getElementById('post-modal').style.display = 'flex';
+            document.getElementById('post-title').focus();
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'post-modal') {
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-content').value = '';
+            }
         }
 
         function submitPost() {
@@ -355,25 +463,30 @@
             const content = document.getElementById('post-content').value.trim();
 
             if (title && content) {
+                showLoading();
                 db.ref(`forum_posts/${currentTopic}`).push({
                     title: title,
                     content: content,
                     userId: currentUser.id,
                     userName: currentUser.name,
                     timestamp: Date.now()
+                }).then(() => {
+                    hideLoading();
+                    closeModal('post-modal');
                 });
-
-                document.getElementById('post-title').value = '';
-                document.getElementById('post-content').value = '';
-                closeModal('post-modal');
             }
         }
 
-        function editPost(id, title, content) {
-            currentEditId = id;
-            document.getElementById('edit-title').value = title;
-            document.getElementById('edit-content').value = content;
-            document.getElementById('edit-modal').style.display = 'flex';
+        function editPost(id, title, content, postUserName) {
+            if (postUserName === currentUser.name) {
+                currentEditId = id;
+                document.getElementById('edit-title').value = title;
+                document.getElementById('edit-content').value = content;
+                document.getElementById('edit-modal').style.display = 'flex';
+                document.getElementById('edit-title').focus();
+            } else {
+                alert('Você só pode editar suas próprias postagens!');
+            }
         }
 
         function submitEdit() {
@@ -381,19 +494,28 @@
             const content = document.getElementById('edit-content').value.trim();
 
             if (title && content && currentEditId) {
+                showLoading();
                 db.ref(`forum_posts/${currentTopic}/${currentEditId}`).update({
                     title: title,
                     content: content,
                     editedAt: Date.now()
+                }).then(() => {
+                    hideLoading();
+                    closeModal('edit-modal');
                 });
-
-                closeModal('edit-modal');
             }
         }
 
-        function deletePost(id) {
-            if (confirm('Tem certeza que deseja excluir esta postagem?')) {
-                db.ref(`forum_posts/${currentTopic}/${id}`).remove();
+        function deletePost(id, postUserName) {
+            if (postUserName === currentUser.name) {
+                if (confirm('Tem certeza que deseja excluir esta postagem?')) {
+                    showLoading();
+                    db.ref(`forum_posts/${currentTopic}/${id}`).remove().then(() => {
+                        hideLoading();
+                    });
+                }
+            } else {
+                alert('Você só pode excluir suas próprias postagens!');
             }
         }
 
@@ -421,6 +543,7 @@
                     commentElement.innerHTML = `
                         <strong>${comment.userName}</strong>
                         <p>${comment.content}</p>
+                        <small>${new Date(comment.timestamp).toLocaleString()}</small>
                     `;
                     commentsListDiv.appendChild(commentElement);
                 });
@@ -432,21 +555,28 @@
             const content = input.value.trim();
 
             if (content) {
+                showLoading();
                 db.ref(`forum_comments/${currentTopic}/${postId}`).push({
                     content: content,
                     userId: currentUser.id,
                     userName: currentUser.name,
                     timestamp: Date.now()
+                }).then(() => {
+                    hideLoading();
+                    input.value = '';
                 });
-
-                input.value = '';
             }
         }
 
-        // Limpar listeners quando mudar de página
+        document.getElementById('username-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
         window.onbeforeunload = function() {
-            db.ref(`forum_posts/${currentTopic}`).off();
-            db.ref('forum_users').off();
+            if (currentTopic) {
+                db.ref(`forum_posts/${currentTopic}`).off();
+                db.ref('forum_users').off();
+            }
         };
     </script>
 </body>
