@@ -1,3 +1,5 @@
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -160,6 +162,39 @@
             transform: scale(1.02);
         }
 
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .video-container::after {
+            content: '🔍 Clique para ampliar';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
         .message-actions {
             text-align: right;
             margin-top: 8px;
@@ -237,8 +272,7 @@
             margin-top: 5px;
         }
 
-        /* Modal para imagem ampliada */
-        #image-modal {
+        #image-modal, #video-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -258,10 +292,35 @@
             border-radius: 8px;
         }
 
-        #image-modal .close-btn {
+        .video-modal-content {
+            width: 90%;
+            max-width: 1280px;
+            position: relative;
+        }
+
+        .video-modal-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .video-modal-container iframe {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+
+        #image-modal .close-btn,
+        #video-modal .close-btn {
+            position: absolute;
+            top: -40px;
+            right: -40px;
             background: white;
             color: black;
             width: 40px;
@@ -275,12 +334,12 @@
             transition: 0.3s;
         }
 
-        #image-modal .close-btn:hover {
+        #image-modal .close-btn:hover,
+        #video-modal .close-btn:hover {
             background: #f8f9fa;
             transform: scale(1.1);
         }
 
-        /* Loading spinner */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -319,6 +378,11 @@
             #online-users {
                 font-size: 0.85em;
             }
+            #video-modal .close-btn,
+            #image-modal .close-btn {
+                top: -50px;
+                right: 0;
+            }
         }
     </style>
 </head>
@@ -346,7 +410,7 @@
         <div id="messages"></div>
 
         <div id="input-area" style="display: none;">
-            <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+            <input type="text" id="message-input" placeholder="Digite sua mensagem ou cole um link do YouTube...">
             <input type="file" id="file-input" accept="image/*" style="display: none;">
             <button id="image-button" title="Enviar imagem">🖼️</button>
             <button id="send-button">Enviar</button>
@@ -355,10 +419,18 @@
         <button id="clear-button">&#128465; Limpar Histórico</button>
     </div>
 
-    <!-- Modal para imagem ampliada -->
     <div id="image-modal">
         <button class="close-btn">×</button>
         <img src="" alt="Imagem ampliada">
+    </div>
+
+    <div id="video-modal">
+        <div class="video-modal-content">
+            <button class="close-btn">×</button>
+            <div class="video-modal-container">
+                <iframe src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -391,7 +463,10 @@
             imageModal: document.getElementById('image-modal'),
             modalImage: document.querySelector('#image-modal img'),
             closeModalButton: document.querySelector('#image-modal .close-btn'),
-            chatSelectionButtons: document.querySelectorAll('#chat-selection button')
+            chatSelectionButtons: document.querySelectorAll('#chat-selection button'),
+            videoModal: document.getElementById('video-modal'),
+            videoModalIframe: document.querySelector('#video-modal iframe'),
+            videoModalClose: document.querySelector('#video-modal .close-btn')
         };
 
         let currentUser = {
@@ -404,12 +479,36 @@
         let messagesRef = null;
         let usersRef = null;
 
+        function getYouTubeVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
         function showLoading() {
             const overlay = document.createElement('div');
             overlay.className = 'loading-overlay';
             overlay.innerHTML = '<div class="loading-spinner"></div>';
             document.body.appendChild(overlay);
             return overlay;
+        }
+
+        function openVideoModal(videoId) {
+            if (!videoId) return;
+
+            const modal = document.getElementById('video-modal');
+            const iframe = modal.querySelector('iframe');
+
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            modal.style.display = 'flex';
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('video-modal');
+            const iframe = modal.querySelector('iframe');
+
+            iframe.src = ''; // Stops video playback
+            modal.style.display = 'none';
         }
 
         async function uploadImage(file) {
@@ -504,13 +603,35 @@
                 minute: '2-digit'
             });
 
+            let messageContent = message.text;
+
+            if (message.text) {
+                const words = message.text.split(' ');
+                words.forEach(word => {
+                    if (word.includes('youtube.com') || word.includes('youtu.be')) {
+                        const videoId = getYouTubeVideoId(word);
+                        if (videoId) {
+                            messageContent = messageContent.replace(word, '');
+                            messageContent += `
+                                <div class="video-container" data-video-id="${videoId}">
+                                    <iframe
+                                        src="https://www.youtube.com/embed/${videoId}"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>`;
+                        }
+                    }
+                });
+            }
+
             messageDiv.innerHTML = `
                 <div class="message-header">
                     <span>${message.user}</span>
                     <span>${time}</span>
                 </div>
                 <div class="message-body">
-                    ${message.text}
+                    ${messageContent}
                     ${message.imageUrl ? `<img src="${message.imageUrl}" alt="Imagem compartilhada" onclick="openImageModal('${message.imageUrl}')">` : ''}
                 </div>
                 ${message.userId === currentUser.id ? `
@@ -519,6 +640,16 @@
                     </div>
                 ` : ''}
             `;
+
+            // Add click event listener for videos
+            const videoContainers = messageDiv.querySelectorAll('.video-container');
+            videoContainers.forEach(container => {
+                container.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const videoId = container.dataset.videoId;
+                    openVideoModal(videoId);
+                });
+            });
 
             if (message.userId === currentUser.id) {
                 const deleteBtn = messageDiv.querySelector('.delete-btn');
@@ -622,7 +753,7 @@
             }
         });
 
-elements.messageInput.addEventListener('keypress', (e) => {
+        elements.messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 elements.sendButton.click();
@@ -644,10 +775,17 @@ elements.messageInput.addEventListener('keypress', (e) => {
             }
         });
 
-        // Fechar modal com tecla ESC
+        elements.videoModalClose.addEventListener('click', closeVideoModal);
+        elements.videoModal.addEventListener('click', (e) => {
+            if (e.target === elements.videoModal) {
+                closeVideoModal();
+            }
+        });
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeImageModal();
+                closeVideoModal();
             }
         });
     </script>
