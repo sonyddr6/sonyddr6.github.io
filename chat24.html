@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bate-Papo Multi-Sala 2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    #chat-container {
+      width: 90%;
+      max-width: 600px;
+      height: 80vh;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #chat-header {
+      background: linear-gradient(90deg, #007bff, #0056b3);
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    #chat-selection {
+      display: flex;
+      justify-content: space-around;
+      background: #e3f2fd;
+      padding: 10px 0;
+      border-bottom: 1px solid #b3e5fc;
+    }
+
+    #chat-selection button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: filter 0.3s;
+      font-weight: 600;
+    }
+
+    #chat-selection button.active {
+      background: #0056b3;
+    }
+
+    #chat-selection button:hover {
+      filter: brightness(90%);
+    }
+
+    #online-users {
+      padding: 10px 15px;
+      background: #e3f2fd;
+      border-bottom: 1px solid #b3e5fc;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 0.9em;
+    }
+
+    .user-status {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      color: #37474f;
+    }
+
+    .online-dot {
+      width: 10px;
+      height: 10px;
+      background: #4caf50;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(0.95); }
+    }
+
+    #messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 12px 15px;
+      border-radius: 15px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 0.9em;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.user {
+      background: #dcf8c6;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.other {
+      background: #ffffff;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.8em;
+      color: #607d8b;
+    }
+
+    .message-header span:first-child {
+      font-weight: 600;
+      color: #37474f;
+    }
+
+    .message img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .message-actions {
+      text-align: right;
+      margin-top: 8px;
+    }
+
+    .delete-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: #e57373;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.85em;
+    }
+
+    .message.user:hover .delete-btn {
+      display: inline-block;
+    }
+
+    #username-area, #input-area {
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      gap: 10px;
+    }
+
+    #username-area input[type="text"],
+    #input-area input[type="text"],
+    #image-url-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+
+    #username-area input[type="text"]:focus,
+    #input-area input[type="text"]:focus,
+    #image-url-input:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #enter-chat {
+      background: #007bff;
+      color: white;
+    }
+
+    #send-button {
+      background: #28a745;
+      color: white;
+    }
+
+    #image-button {
+      background: #6c757d;
+      color: white;
+      padding: 10px 15px;
+      margin-right: 5px;
+    }
+
+    #clear-button {
+      background: #dc3545;
+      color: white;
+      width: 100%;
+      margin-top: 5px;
+      justify-content: center;
+    }
+
+    #typing-indicator {
+      font-size: 0.85em;
+      color: #78909c;
+      font-style: italic;
+      padding: 5px 12px;
+      border-radius: 15px;
+      background: #eceff1;
+      display: none;
+      align-self: flex-start;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b0bec5;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #78909c;
+    }
+
+    @media (max-width: 768px) {
+      #chat-container {
+        width: 100%;
+        height: 90vh;
+      }
+      .message {
+        max-width: 85%;
+      }
+      #online-users {
+        font-size: 0.85em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-header">
+      &#128172; Chat Avançado
+    </div>
+    <div id="chat-selection">
+      <button data-chat="1" class="active">Chat 1</button>
+      <button data-chat="2">Chat 2</button>
+      <button data-chat="3">Chat 3</button>
+      <button data-chat="4">Chat 4</button>
+    </div>
+
+    <div id="online-users">
+      <strong>Usuários Online:</strong>
+    </div>
+
+    <div id="username-area">
+      <input type="text" id="username-input" placeholder="Digite seu nome..." maxlength="20">
+      <button id="enter-chat">Entrar</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="input-area" style="display: none;">
+      <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+      <input type="file" id="file-input" accept="image/*" style="display: none;">
+      <button id="image-button" title="Enviar imagem">🖼️</button>
+      <button id="send-button">Enviar</button>
+    </div>
+
+    <button id="clear-button">&#128465; Limpar Histórico</button>
+    <div id="typing-indicator">digitando...</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKCSa5ajS4Ffsb9zRoDbGoKdM-v6QgSG8",
+      authDomain: "meuchatapp-f6f2d.firebaseapp.com",
+      projectId: "meuchatapp-f6f2d",
+      storageBucket: "meuchatapp-f6f2d.firebasestorage.app",
+      messagingSenderId: "715047208925",
+      appId: "1:715047208925:web:0087d905ee99e32354d834",
+      measurementId: "G-2D2BPMSYRC"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const elements = {
+      messages: document.getElementById('messages'),
+      messageInput: document.getElementById('message-input'),
+      fileInput: document.getElementById('file-input'),
+      imageButton: document.getElementById('image-button'),
+      sendButton: document.getElementById('send-button'),
+      clearButton: document.getElementById('clear-button'),
+      enterChat: document.getElementById('enter-chat'),
+      usernameInput: document.getElementById('username-input'),
+      inputArea: document.getElementById('input-area'),
+      onlineUsers: document.getElementById('online-users'),
+      typingIndicator: document.getElementById('typing-indicator'),
+      chatSelectionButtons: document.querySelectorAll('#chat-selection button')
+    };
+
+    let currentUser = {
+      id: '',
+      name: '',
+      isTyping: false,
+      lastTypingTimeout: null
+    };
+    let currentChat = "1";
+    let messagesRef = null;
+    let usersRef = null;
+
+    // Função para mostrar loading
+    function showLoading() {
+      const overlay = document.createElement('div');
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = '<div class="loading-spinner"></div>';
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+
+    // Função para upload de imagem
+    async function uploadImage(file) {
+      const apiKey = 'a1cb895f66675403d2cd55c6776cdceb'; // Sua API key do ImgBB
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const loading = showLoading();
+
+      try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          // Envia a mensagem com a URL da imagem
+          db.ref(`chats/${currentChat}/messages`).push({
+            text: '',
+            imageUrl: data.data.url,
+            user: currentUser.name,
+            userId: currentUser.id,
+            timestamp: Date.now(),
+            status: 'active'
+          });
+        } else {
+          alert('Erro ao fazer upload da imagem');
+        }
+      } catch (error) {
+        console.error('Erro no upload:', error);
+        alert('Erro ao fazer upload da imagem');
+      } finally {
+        loading.remove();
+      }
+    }
+
+    function initUserForChat() {
+      currentUser.id = currentUser.id || Math.random().toString(36).substr(2, 9);
+      usersRef = db.ref(`chats/${currentChat}/users/${currentUser.id}`);
+      usersRef.set({
+        name: currentUser.name,
+        online: true,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+      usersRef.onDisconnect().update({
+        online: false,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+    }
+
+    function setupListenersForChat() {
+      if (messagesRef) messagesRef.off();
+      if (usersRef) usersRef.off();
+
+      messagesRef = db.ref(`chats/${currentChat}/messages`);
+      messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
+        const message = { id: snapshot.key, ...snapshot.val() };
+        if (message.status === 'active') {
+          elements.messages.appendChild(createMessageElement(message));
+          elements.messages.scrollTop = elements.messages.scrollHeight;
+        }
+      });
+
+      usersRef = db.ref(`chats/${currentChat}/users`);
+      usersRef.orderByChild('online').equalTo(true).on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const totalOnline = Object.keys(users).length;
+        let listHTML = `<strong>Usuários Online (${totalOnline}):</strong>`;
+        Object.values(users).forEach(user => {
+          listHTML += `
+            <div class="user-status">
+              <div class="online-dot"></div>
+              ${user.name} ${user.isTyping ? '<span style="font-size:0.8em; font-style:italic;">(digitando...)</span>' : ''}
+            </div>
+          `;
+        });
+        elements.onlineUsers.innerHTML = listHTML;
+      });
+    }
+
+    function createMessageElement(message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${message.userId === currentUser.id ? 'user' : 'other'}`;
+      messageDiv.dataset.messageId = message.id;
+
+      const time = new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      messageDiv.innerHTML = `
+        <div class="message-header">
+          <span>${message.user}</span>
+          <span>${time}</span>
+        </div>
+        <div class="message-body">
+          ${message.text}
+          ${message.imageUrl ? `<img src="${message.imageUrl}" alt="Imagem compartilhada">` : ''}
+        </div>
+        ${message.userId === currentUser.id ? `
+          <div class="message-actions">
+            <button class="delete-btn" title="Excluir">🗑️</button>
+          </div>
+        ` : ''}
+      `;
+
+      if (message.userId === currentUser.id) {
+        const deleteBtn = messageDiv.querySelector('.delete-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => {
+            if (confirm('Deseja realmente excluir esta mensagem?')) {
+              deleteMessage(message.id);
+              messageDiv.remove();
+            }
+          });
+        }
+      }
+      return messageDiv;
+    }
+
+    function deleteMessage(messageId) {
+      db.ref(`chats/${currentChat}/messages/${messageId}`).update({ status: 'deleted' });
+    }
+
+    function updateTypingStatus() {
+      db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: true });
+      clearTimeout(currentUser.lastTypingTimeout);
+      currentUser.lastTypingTimeout = setTimeout(() => {
+        db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: false });
+      }, 1500);
+    }
+
+    function changeChat(newChat) {
+      if (newChat === currentChat) return;
+
+      db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ online: false, isTyping: false });
+      elements.messages.innerHTML = '';
+      currentChat = newChat;
+      elements.chatSelectionButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-chat') === currentChat);
+      });
+
+      if (currentUser.name) {
+        initUserForChat();
+        setupListenersForChat();
+      }
+    }
+
+    // Event Listeners
+    elements.chatSelectionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const newChat = button.getAttribute('data-chat');
+        changeChat(newChat);
+      });
+    });
+
+    elements.enterChat.addEventListener('click', () => {
+      const name = elements.usernameInput.value.trim();
+      if (name) {
+        currentUser.name = name;
+        elements.usernameInput.disabled = true;
+        elements.enterChat.disabled = true;
+        elements.inputArea.style.display = 'flex';
+        initUserForChat();
+        setupListenersForChat();
+      }
+    });
+
+    elements.imageButton.addEventListener('click', () => {
+      elements.fileInput.click();
+    });
+
+    elements.fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 2048000) { // 2MB limit
+          alert('Arquivo muito grande. Limite de 2MB.');
+          return;
+        }
+        
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('Tipo de arquivo não suportado. Use JPG, PNG ou GIF.');
+          return;
+        }
+
+        // Mostra preview e confirmação
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const preview = document.createElement('div');
+          preview.innerHTML = `
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+                        z-index: 1000;">
+              <h4>Enviar esta imagem?</h4>
+              <img src="${e.target.result}" style="max-width: 300px; max-height: 300px; margin: 10px 0;">
+              <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <button onclick="this.parentElement.parentElement.remove();" 
+                        style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 5px;">
+                  Cancelar
+                </button>
+                <button id="confirm-upload" 
+                        style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 5px;">
+                  Enviar
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(preview);
+
+          document.getElementById('confirm-upload').onclick = async () => {
+            preview.remove();
+            await uploadImage(file);
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    elements.sendButton.addEventListener('click', () => {
+      const messageText = elements.messageInput.value.trim();
+      if (messageText) {
+        db.ref(`chats/${currentChat}/messages`).push({
+          text: messageText,
+          user: currentUser.name,
+          userId: currentUser.id,
+          timestamp: Date.now(),
+          status: 'active'
+        });
+        elements.messageInput.value = '';
+      }
+    });
+
+    elements.messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        elements.sendButton.click();
+      }
+      updateTypingStatus();
+    });
+
+    elements.clearButton.addEventListener('click', () => {
+      const password = prompt('Senha de administração:');
+      if (password === '1234') {
+        db.ref(`chats/${currentChat}/messages`).remove();
+      }
+    });
+  </script>
+</body>
+</html>
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bate-Papo Multi-Sala 2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    #chat-container {
+      width: 90%;
+      max-width: 600px;
+      height: 80vh;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #chat-header {
+      background: linear-gradient(90deg, #007bff, #0056b3);
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    #chat-selection {
+      display: flex;
+      justify-content: space-around;
+      background: #e3f2fd;
+      padding: 10px 0;
+      border-bottom: 1px solid #b3e5fc;
+    }
+
+    #chat-selection button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: filter 0.3s;
+      font-weight: 600;
+    }
+
+    #chat-selection button.active {
+      background: #0056b3;
+    }
+
+    #chat-selection button:hover {
+      filter: brightness(90%);
+    }
+
+    #online-users {
+      padding: 10px 15px;
+      background: #e3f2fd;
+      border-bottom: 1px solid #b3e5fc;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 0.9em;
+    }
+    .user-status {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      color: #37474f;
+    }
+
+    .online-dot {
+      width: 10px;
+      height: 10px;
+      background: #4caf50;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(0.95); }
+    }
+
+    #messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 12px 15px;
+      border-radius: 15px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 0.9em;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.user {
+      background: #dcf8c6;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.other {
+      background: #ffffff;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.8em;
+      color: #607d8b;
+    }
+
+    .message-header span:first-child {
+      font-weight: 600;
+      color: #37474f;
+    }
+
+    .message img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .message-actions {
+      text-align: right;
+      margin-top: 8px;
+    }
+
+    .delete-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: #e57373;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.85em;
+    }
+
+    .message.user:hover .delete-btn {
+      display: inline-block;
+    }
+
+    #username-area, #input-area {
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      gap: 10px;
+    }
+
+    #username-area input[type="text"],
+    #input-area input[type="text"],
+    #image-url-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+
+    #username-area input[type="text"]:focus,
+    #input-area input[type="text"]:focus,
+    #image-url-input:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #enter-chat {
+      background: #007bff;
+      color: white;
+    }
+
+    #send-button {
+      background: #28a745;
+      color: white;
+    }
+
+    #image-button {
+      background: #6c757d;
+      color: white;
+      padding: 10px 15px;
+      margin-right: 5px;
+    }
+
+    #clear-button {
+      background: #dc3545;
+      color: white;
+      width: 100%;
+      margin-top: 5px;
+      justify-content: center;
+    }
+
+    #typing-indicator {
+      font-size: 0.85em;
+      color: #78909c;
+      font-style: italic;
+      padding: 5px 12px;
+      border-radius: 15px;
+      background: #eceff1;
+      display: none;
+      align-self: flex-start;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #b0bec5;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #78909c;
+    }
+
+    @media (max-width: 768px) {
+      #chat-container {
+        width: 100%;
+        height: 90vh;
+      }
+      .message {
+        max-width: 85%;
+      }
+      #online-users {
+        font-size: 0.85em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-header">
+      &#128172; Chat Avançado
+    </div>
+    <div id="chat-selection">
+      <button data-chat="1" class="active">Chat 1</button>
+      <button data-chat="2">Chat 2</button>
+      <button data-chat="3">Chat 3</button>
+      <button data-chat="4">Chat 4</button>
+    </div>
+
+    <div id="online-users">
+      <strong>Usuários Online:</strong>
+    </div>
+
+    <div id="username-area">
+      <input type="text" id="username-input" placeholder="Digite seu nome..." maxlength="20">
+      <button id="enter-chat">Entrar</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="input-area" style="display: none;">
+      <input type="text" id="message-input" placeholder="Digite sua mensagem...">
+      <input type="file" id="file-input" accept="image/*" style="display: none;">
+      <button id="image-button" title="Enviar imagem">🖼️</button>
+      <button id="send-button">Enviar</button>
+    </div>
+
+    <button id="clear-button">&#128465; Limpar Histórico</button>
+    <div id="typing-indicator">digitando...</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKCSa5ajS4Ffsb9zRoDbGoKdM-v6QgSG8",
+      authDomain: "meuchatapp-f6f2d.firebaseapp.com",
+      projectId: "meuchatapp-f6f2d",
+      storageBucket: "meuchatapp-f6f2d.firebasestorage.app",
+      messagingSenderId: "715047208925",
+      appId: "1:715047208925:web:0087d905ee99e32354d834",
+      measurementId: "G-2D2BPMSYRC"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const elements = {
+      messages: document.getElementById('messages'),
+      messageInput: document.getElementById('message-input'),
+      fileInput: document.getElementById('file-input'),
+      imageButton: document.getElementById('image-button'),
+      sendButton: document.getElementById('send-button'),
+      clearButton: document.getElementById('clear-button'),
+      enterChat: document.getElementById('enter-chat'),
+      usernameInput: document.getElementById('username-input'),
+      inputArea: document.getElementById('input-area'),
+      onlineUsers: document.getElementById('online-users'),
+      typingIndicator: document.getElementById('typing-indicator'),
+      chatSelectionButtons: document.querySelectorAll('#chat-selection button')
+    };
+
+    let currentUser = {
+      id: '',
+      name: '',
+      isTyping: false,
+      lastTypingTimeout: null
+    };
+    let currentChat = "1";
+    let messagesRef = null;
+    let usersRef = null;
+
+    // Função para mostrar loading
+    function showLoading() {
+      const overlay = document.createElement('div');
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = '<div class="loading-spinner"></div>';
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+
+    // Função para upload de imagem
+    async function uploadImage(file) {
+      const apiKey = 'a1cb895f66675403d2cd55c6776cdceb'; // Sua API key do ImgBB
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const loading = showLoading();
+
+      try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Envia a mensagem com a URL da imagem
+          db.ref(`chats/${currentChat}/messages`).push({
+            text: '',
+            imageUrl: data.data.url,
+            user: currentUser.name,
+            userId: currentUser.id,
+            timestamp: Date.now(),
+            status: 'active'
+          });
+        } else {
+          alert('Erro ao fazer upload da imagem');
+        }
+      } catch (error) {
+        console.error('Erro no upload:', error);
+        alert('Erro ao fazer upload da imagem');
+      } finally {
+        loading.remove();
+      }
+    }
+
+    function initUserForChat() {
+      currentUser.id = currentUser.id || Math.random().toString(36).substr(2, 9);
+      usersRef = db.ref(`chats/${currentChat}/users/${currentUser.id}`);
+      usersRef.set({
+        name: currentUser.name,
+        online: true,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+      usersRef.onDisconnect().update({
+        online: false,
+        lastActive: Date.now(),
+        isTyping: false
+      });
+    }
+
+    function setupListenersForChat() {
+      if (messagesRef) messagesRef.off();
+      if (usersRef) usersRef.off();
+
+      messagesRef = db.ref(`chats/${currentChat}/messages`);
+      messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
+        const message = { id: snapshot.key, ...snapshot.val() };
+        if (message.status === 'active') {
+          elements.messages.appendChild(createMessageElement(message));
+          elements.messages.scrollTop = elements.messages.scrollHeight;
+        }
+      });
+
+      usersRef = db.ref(`chats/${currentChat}/users`);
+      usersRef.orderByChild('online').equalTo(true).on('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const totalOnline = Object.keys(users).length;
+        let listHTML = `<strong>Usuários Online (${totalOnline}):</strong>`;
+        Object.values(users).forEach(user => {
+          listHTML += `
+            <div class="user-status">
+              <div class="online-dot"></div>
+              ${user.name} ${user.isTyping ? '<span style="font-size:0.8em; font-style:italic;">(digitando...)</span>' : ''}
+            </div>
+          `;
+        });
+        elements.onlineUsers.innerHTML = listHTML;
+      });
+    }
+
+    function createMessageElement(message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${message.userId === currentUser.id ? 'user' : 'other'}`;
+      messageDiv.dataset.messageId = message.id;
+
+      const time = new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      messageDiv.innerHTML = `
+        <div class="message-header">
+          <span>${message.user}</span>
+          <span>${time}</span>
+        </div>
+        <div class="message-body">
+          ${message.text}
+          ${message.imageUrl ? `<img src="${message.imageUrl}" alt="Imagem compartilhada">` : ''}
+        </div>
+        ${message.userId === currentUser.id ? `
+          <div class="message-actions">
+            <button class="delete-btn" title="Excluir">🗑️</button>
+          </div>
+        ` : ''}
+      `;
+
+      if (message.userId === currentUser.id) {
+        const deleteBtn = messageDiv.querySelector('.delete-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => {
+            if (confirm('Deseja realmente excluir esta mensagem?')) {
+              deleteMessage(message.id);
+              messageDiv.remove();
+            }
+          });
+        }
+      }
+      return messageDiv;
+    }
+
+    function deleteMessage(messageId) {
+      db.ref(`chats/${currentChat}/messages/${messageId}`).update({ status: 'deleted' });
+    }
+
+    function updateTypingStatus() {
+      db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: true });
+      clearTimeout(currentUser.lastTypingTimeout);
+      currentUser.lastTypingTimeout = setTimeout(() => {
+        db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ isTyping: false });
+      }, 1500);
+    }
+
+    function changeChat(newChat) {
+      if (newChat === currentChat) return;
+
+      db.ref(`chats/${currentChat}/users/${currentUser.id}`).update({ online: false, isTyping: false });
+      elements.messages.innerHTML = '';
+      currentChat = newChat;
+      elements.chatSelectionButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-chat') === currentChat);
+      });
+
+      if (currentUser.name) {
+        initUserForChat();
+        setupListenersForChat();
+      }
+    }
+
+    // Event Listeners
+    elements.chatSelectionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const newChat = button.getAttribute('data-chat');
+        changeChat(newChat);
+      });
+    });
+
+    elements.enterChat.addEventListener('click', () => {
+      const name = elements.usernameInput.value.trim();
+      if (name) {
+        currentUser.name = name;
+        elements.usernameInput.disabled = true;
+        elements.enterChat.disabled = true;
+        elements.inputArea.style.display = 'flex';
+        initUserForChat();
+        setupListenersForChat();
+      }
+    });
+
+    elements.imageButton.addEventListener('click', () => {
+      elements.fileInput.click();
+    });
+
+    elements.fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 2048000) { // 2MB limit
+          alert('Arquivo muito grande. Limite de 2MB.');
+          return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('Tipo de arquivo não suportado. Use JPG, PNG ou GIF.');
+          return;
+        }
+
+        // Mostra preview e confirmação
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const preview = document.createElement('div');
+          preview.innerHTML = `
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                        z-index: 1000;">
+              <h4>Enviar esta imagem?</h4>
+              <img src="${e.target.result}" style="max-width: 300px; max-height: 300px; margin: 10px 0;">
+              <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <button onclick="this.parentElement.parentElement.remove();"
+                        style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 5px;">
+                  Cancelar
+                </button>
+                <button id="confirm-upload"
+                        style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 5px;">
+                  Enviar
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(preview);
+
+          document.getElementById('confirm-upload').onclick = async () => {
+            preview.remove();
+            await uploadImage(file);
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    elements.sendButton.addEventListener('click', () => {
+      const messageText = elements.messageInput.value.trim();
+      if (messageText) {
+        db.ref(`chats/${currentChat}/messages`).push({
+          text: messageText,
+          user: currentUser.name,
+          userId: currentUser.id,
+          timestamp: Date.now(),
+          status: 'active'
+        });
+        elements.messageInput.value = '';
+      }
+    });
+
+    elements.messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        elements.sendButton.click();
+      }
+      updateTypingStatus();
+    });
+
+    elements.clearButton.addEventListener('click', () => {
+      const password = prompt('Senha de administração:');
+      if (password === '1234') {
+        db.ref(`chats/${currentChat}/messages`).remove();
+      }
+    });
+  </script>
+</body>
+</html>
+
