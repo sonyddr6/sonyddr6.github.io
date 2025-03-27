@@ -1,368 +1,457 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Super Contador Mobile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Super Contador</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
 
-  <!-- SDK do Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-  <style>
-    /* Estilos (idem ao seu código original) */
-    :root {
-      --button-size: min(8vw, 50px);
-      --counter-size: min(15vw, 80px);
-      --primary-color: #4CAF50;
-      --secondary-color: #f44336;
-      --accent-color: #008CBA;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #f9f9f9;
-      transition: background-color 0.5s;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    h1 {
-      color: #333;
-      font-size: min(6vw, 24px);
-      margin: 10px 0;
-      text-align: center;
-      transition: color 0.5s;
-    }
-    #counter {
-      font-size: var(--counter-size);
-      margin: 20px 0;
-      color: #555;
-      transition: all 0.3s;
-      font-weight: bold;
-    }
-    #counter.counter-animation {
-      transform: scale(1.2);
-      color: var(--primary-color) !important;
-    }
-    .buttons-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-    }
-    button {
-      font-size: min(5vw, 20px);
-      padding: 15px;
-      margin: 0;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-      max-width: 300px;
-      min-height: var(--button-size);
-      touch-action: manipulation;
-    }
-    button:active {
-      transform: scale(0.95);
-    }
-    button:hover {
-      filter: brightness(1.1);
-    }
-    #clickBtn {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    #resetBtn {
-      background-color: var(--secondary-color);
-      color: white;
-    }
-    #hiddenBtn {
-      background-color: var(--accent-color);
-      color: white;
-      display: none;
-    }
-    .theme-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      font-size: 24px;
-      padding: 0;
-      background-color: #666;
-      z-index: 1000;
-    }
-    .achievement {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary-color);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 25px;
-      animation: slideDown 0.5s ease-out;
-      font-size: min(4vw, 16px);
-    }
-    .online-users {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 10px 15px;
-      border-radius: 10px;
-      font-size: 14px;
-      z-index: 1000;
-    }
-    @keyframes slideDown {
-      from { top: -50px; }
-      to { top: 20px; }
-    }
-    .dark-mode {
-      background-color: #1a1a1a;
-      color: white;
-    }
-    .dark-mode h1 {
-      color: #fff;
-    }
-    .dark-mode #counter {
-      color: #ccc;
-    }
-    @media (orientation: landscape) {
-      body {
-        justify-content: flex-start;
-        padding-top: 30px;
-      }
-      .buttons-container {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        max-width: 90%;
-      }
-      button {
-        width: 45%;
-        max-width: 200px;
-        font-size: min(4vw, 18px);
-        padding: 12px;
-      }
-      #counter {
-        font-size: min(12vw, 70px);
-        margin: 30px 0;
-      }
-      h1 {
-        font-size: min(5vw, 22px);
-      }
-    }
-    @media (min-width: 768px) {
-      .buttons-container {
-        flex-direction: row;
-        gap: 20px;
-      }
-      button {
-        width: auto;
-        padding: 20px 30px;
-        font-size: 18px;
-      }
-    }
-  </style>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f8fafc;
+            --text: #1e293b;
+            --card: #ffffff;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --radius: 1rem;
+            
+            --counter-size: clamp(3rem, 15vw, 8rem);
+            --button-size: clamp(2.5rem, 8vw, 3.5rem);
+        }
+
+        .dark-theme {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --background: #0f172a;
+            --text: #f1f5f9;
+            --card: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text);
+            opacity: 0.7;
+            font-size: 0.875rem;
+        }
+
+        .counter-display {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .counter {
+            font-size: var(--counter-size);
+            font-weight: 700;
+            color: var(--primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .counter.animate {
+            transform: scale(1.1);
+        }
+
+        .buttons {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+
+        .btn {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-secret {
+            background: var(--warning);
+            display: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            font-size: 0.875rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            opacity: 0.7;
+            font-size: 0.75rem;
+        }
+
+        .achievement {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            animation: slideDown 0.5s ease-out;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            background: var(--card);
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            font-size: 1.5rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(45deg);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="online-users" id="onlineUsers">Usuários Online: 0</div>
-  <button class="theme-btn" id="themeBtn">🌓</button>
-  <h1>Super Contador Mobile</h1>
-  <div id="counter">0</div>
-  <div class="buttons-container">
-    <button id="clickBtn">Clique aqui!</button>
-    <button id="resetBtn">Resetar</button>
-    <button id="hiddenBtn" onclick="location.href='subpage.html'">Subpágina Secreta</button>
-  </div>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Super Contador 2.0</h1>
+            <p class="subtitle">Clique para aumentar o contador</p>
+        </header>
 
-  <script>
-    // Configuração do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5j...", // Substitua pela sua chave de API real
-      authDomain: "supercontador-ab2b7.firebaseapp.com",
-      databaseURL: "https://supercontador-ab2b7-default-rtdb.firebaseio.com/",
-      projectId: "supercontador-ab2b7",
-      storageBucket: "supercontador-ab2b7.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcd1234..."
-    };
+        <div class="counter-display">
+            <div id="counter" class="counter">0</div>
+        </div>
 
-    // Inicializa o Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+        <div class="buttons">
+            <button id="clickBtn" class="btn btn-primary">
+                <span>Incrementar</span>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </button>
+            
+            <button id="resetBtn" class="btn btn-danger">
+                <span>Resetar</span>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+            
+            <button id="hiddenBtn" class="btn btn-secret" onclick="location.href='reuniao.html'">
+                Chat
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                </svg>
+            </button>
+        </div>
 
-    // Função para obter o IP do usuário via API pública
-    async function getIP() {
-      try {
-        const response = await fetch("https://api64.ipify.org?format=json");
-        const data = await response.json();
-        return data.ip;
-      } catch (error) {
-        console.error("Erro ao obter IP:", error);
-        return null;
-      }
-    }
+        <div class="stats">
+            <div class="stat">
+                <div id="onlineUsers" class="stat-value">0</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat">
+                <div id="totalClicks" class="stat-value">0</div>
+                <div class="stat-label">Total de Cliques</div>
+            </div>
+            <div class="stat">
+                <div id="personalClicks" class="stat-value">0</div>
+                <div class="stat-label">Seus Cliques</div>
+            </div>
+        </div>
+    </div>
 
-    // Variáveis globais para o sistema de cliques e usuários
-    const clicksRef = database.ref('clicks');
-    const usersRef = database.ref('users');
-    let count = 0;
-    let currentUserRef = null;
+    <button id="themeBtn" class="theme-toggle" aria-label="Alternar tema">🌓</button>
 
-    const counterDiv = document.getElementById('counter');
-    const clickBtn = document.getElementById('clickBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const hiddenBtn = document.getElementById('hiddenBtn');
-    const themeBtn = document.getElementById('themeBtn');
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdZ8k7m2XpY4Jk9J7K5jZhx8vR3QDgpRY",
+            authDomain: "supercontador-ab2b7.firebaseapp.com",
+            databaseURL: "https://supercontador-ab2b7-default-rtdb.firebaseio.com",
+            projectId: "supercontador-ab2b7",
+            storageBucket: "supercontador-ab2b7.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcd1234efgh5678"
+        };
 
-    // Função para inicializar a presença do usuário, salvando o IP junto com os cliques
-    async function initUserPresence() {
-      // Obtém o IP do usuário antes de criar o registro
-      const ip = await getIP();
+        // Inicialização do Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-      // Cria uma nova entrada para o usuário
-      currentUserRef = usersRef.push();
-      const userData = {
-        ip: ip || "não disponível",
-        id: Date.now(),
-        lastActive: firebase.database.ServerValue.TIMESTAMP,
-        device: (navigator.userAgentData && navigator.userAgentData.mobile) ? 'Mobile' : 'Desktop',
-        clicks: 0
-      };
-      currentUserRef.set(userData);
+        // Referências do Firebase
+        const clicksRef = database.ref('clicks');
+        const usersRef = database.ref('users');
+        let currentUserRef = null;
 
-      // Atualiza a atividade do usuário a cada 30 segundos
-      setInterval(() => {
-        currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
-      }, 30000);
+        // Elementos do DOM
+        const counterDiv = document.getElementById('counter');
+        const clickBtn = document.getElementById('clickBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const hiddenBtn = document.getElementById('hiddenBtn');
+        const themeBtn = document.getElementById('themeBtn');
+        const totalClicksDiv = document.getElementById('totalClicks');
+        const personalClicksDiv = document.getElementById('personalClicks');
 
-      // Remove a entrada quando o usuário desconecta
-      currentUserRef.onDisconnect().remove();
+        // Estado local
+        let count = 0;
+        let personalClicks = 0;
 
-      // Atualiza a contagem de usuários online
-      usersRef.on('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        const onlineCount = Object.keys(users).length;
-        document.getElementById('onlineUsers').textContent = `Usuários Online: ${onlineCount}`;
-      });
-    }
+        // Sistema de conquistas
+        const achievements = {
+            5: { text: "Primeiros Passos! 🎉", color: "#10b981" },
+            10: { text: "Dez Maravilhas! 🚀", color: "#3b82f6" },
+            25: { text: "Vinte e Cinco! 🔥", color: "#f59e0b" },
+            50: { text: "Cinquenta Cliques! 💎", color: "#8b5cf6" },
+            100: { text: "Centenário Mestre! 🏆", color: "#ef4444" },
+            500: { text: "Rei dos Cliques! 👑", color: "#6366f1" },
+            1000: { text: "Clique Lendário! 🦄", color: "#ec4899" }
+        };
 
-    // Sistema de conquistas (opcional)
-    const achievements = {
-      5: "🎉 Primeiros Passos! 5 cliques!",
-      10: "🚀 Dez Maravilhas!",
-      25: "🔥 Vinte e Cinco!",
-      50: "💎 Cinquenta Cliques!",
-      100: "🏆 Centenário Mestre!",
-      500: "👑 Rei dos Cliques!",
-      1000: "🦄 Clique Lendário!"
-    };
+        // Funções auxiliares
+        async function getIP() {
+            try {
+                const response = await fetch("https://api64.ipify.org?format=json");
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error("Erro ao obter IP:", error);
+                return null;
+            }
+        }
 
-    // Função para mostrar conquistas
-    function showAchievement(text) {
-      const div = document.createElement('div');
-      div.className = 'achievement';
-      div.textContent = text;
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), 2000);
-    }
+        function showAchievement(achievement) {
+            const div = document.createElement('div');
+            div.className = 'achievement';
+            div.textContent = achievement.text;
+            div.style.backgroundColor = achievement.color;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
 
-    // Função de clique que atualiza os cliques no nó do usuário e no total
-    function handleClick() {
-      count++;
+        function animateCounter() {
+            counterDiv.classList.add('animate');
+            setTimeout(() => counterDiv.classList.remove('animate'), 300);
+        }
 
-      // Atualiza o total de cliques
-      clicksRef.set(count);
+        // Inicialização do usuário
+        async function initUserPresence() {
+            const ip = await getIP();
+            
+            currentUserRef = usersRef.push();
+            const userData = {
+                ip: ip || "não disponível",
+                id: Date.now(),
+                lastActive: firebase.database.ServerValue.TIMESTAMP,
+                device: navigator.userAgentData?.mobile ? 'Mobile' : 'Desktop',
+                clicks: 0
+            };
 
-      // Atualiza os cliques do usuário individual
-      if (currentUserRef) {
-        currentUserRef.transaction((user) => {
-          if (user) {
-            user.clicks = (user.clicks || 0) + 1;
-            user.lastActive = firebase.database.ServerValue.TIMESTAMP;
-          }
-          return user;
+            currentUserRef.set(userData);
+
+            // Atualização de atividade
+            setInterval(() => {
+                currentUserRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
+            }, 30000);
+
+            // Limpeza na desconexão
+            currentUserRef.onDisconnect().remove();
+
+            // Monitoramento de usuários online
+            usersRef.on('value', (snapshot) => {
+                const users = snapshot.val() || {};
+                document.getElementById('onlineUsers').textContent = Object.keys(users).length;
+            });
+        }
+
+        // Handlers de eventos
+        function handleClick() {
+            count++;
+            personalClicks++;
+
+            clicksRef.set(count);
+            counterDiv.textContent = count;
+            totalClicksDiv.textContent = count;
+            personalClicksDiv.textContent = personalClicks;
+
+            if (currentUserRef) {
+                currentUserRef.update({ 
+                    clicks: personalClicks,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+
+            animateCounter();
+            hiddenBtn.style.display = count >= 5 ? 'flex' : 'none';
+
+            if (achievements[count]) {
+                showAchievement(achievements[count]);
+            }
+        }
+
+        function handleReset() {
+            count = 0;
+            personalClicks = 0;
+            
+            clicksRef.set(0);
+            counterDiv.textContent = count;
+            totalClicksDiv.textContent = count;
+            personalClicksDiv.textContent = personalClicks;
+            
+            hiddenBtn.style.display = 'none';
+
+            if (currentUserRef) {
+                currentUserRef.update({ clicks: 0 });
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            themeBtn.textContent = document.body.classList.contains('dark-theme') ? '🌞' : '🌓';
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carregar tema
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeBtn.textContent = '🌞';
+            }
+
+            // Inicializar Firebase e eventos
+            initUserPresence();
+            
+            // Carregar contador atual
+            clicksRef.on('value', (snapshot) => {
+                count = snapshot.val() || 0;
+                counterDiv.textContent = count;
+                totalClicksDiv.textContent = count;
+                hiddenBtn.style.display = count >= 5 ? 'flex' : 'none';
+            });
+
+            // Event listeners
+            clickBtn.addEventListener('click', handleClick);
+            resetBtn.addEventListener('click', handleReset);
+            themeBtn.addEventListener('click', toggleTheme);
+
+            // Prevenção de comportamentos indesejados
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('touchstart', e => {
+                if (e.target.tagName !== 'BUTTON') e.preventDefault();
+            }, { passive: false });
         });
-      }
-
-      counterDiv.textContent = count;
-      counterDiv.classList.add('counter-animation');
-      setTimeout(() => counterDiv.classList.remove('counter-animation'), 300);
-      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
-
-      // Exibe conquista, se aplicável
-      if (achievements[count]) {
-        showAchievement(achievements[count]);
-      }
-    }
-
-    // Eventos de clique e toque
-    clickBtn.addEventListener('click', handleClick);
-    clickBtn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      handleClick();
-    });
-
-    // Evento para resetar o contador
-    resetBtn.addEventListener('click', function() {
-      count = 0;
-      clicksRef.set(0);
-      counterDiv.textContent = count;
-      hiddenBtn.style.display = 'none';
-      if (currentUserRef) {
-        currentUserRef.update({ clicks: 0 });
-      }
-    });
-
-    // Alterna o tema (dark/light)
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      themeBtn.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌓';
-    });
-
-    // Desabilita o menu de contexto e teclas específicas
-    document.addEventListener('contextmenu', event => event.preventDefault());
-    document.onkeydown = function(e) {
-      if (
-        e.keyCode === 123 || 
-        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
-        (e.ctrlKey && e.keyCode === 85)
-      ) {
-        alert('Recurso desabilitado!');
-        return false;
-      }
-    };
-
-    // Ajustes para dispositivos touch
-    if ('ontouchstart' in window) {
-      document.body.classList.add('touch-device');
-      document.documentElement.style.setProperty('--button-size', '60px');
-    }
-
-    // Atualiza o contador a partir do banco de dados
-    clicksRef.on('value', (snapshot) => {
-      count = snapshot.val() || 0;
-      counterDiv.textContent = count;
-      hiddenBtn.style.display = count >= 5 ? 'inline-block' : 'none';
-    });
-
-    // Inicializa a presença do usuário ao carregar a página
-    window.addEventListener('load', () => {
-      initUserPresence();
-    });
-  </script>
+    </script>
 </body>
 </html>
