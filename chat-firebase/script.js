@@ -1,1 +1,34 @@
-const _0x28577e=_0x4dc0;(function(_0x31e18e,_0x37b1a0){const _0x3ecf25=_0x4dc0,_0x78349b=_0x31e18e();while(!![]){try{const _0x4f01f5=-parseInt(_0x3ecf25(0x186))/0x1+-parseInt(_0x3ecf25(0x187))/0x2*(-parseInt(_0x3ecf25(0x18e))/0x3)+parseInt(_0x3ecf25(0x18f))/0x4*(-parseInt(_0x3ecf25(0x183))/0x5)+parseInt(_0x3ecf25(0x195))/0x6+-parseInt(_0x3ecf25(0x188))/0x7+parseInt(_0x3ecf25(0x191))/0x8*(-parseInt(_0x3ecf25(0x185))/0x9)+parseInt(_0x3ecf25(0x197))/0xa*(parseInt(_0x3ecf25(0x193))/0xb);if(_0x4f01f5===_0x37b1a0)break;else _0x78349b['push'](_0x78349b['shift']());}catch(_0x308edf){_0x78349b['push'](_0x78349b['shift']());}}}(_0x23b3,0xed30f));const firebaseConfig={'apiKey':_0x28577e(0x198),'authDomain':_0x28577e(0x18a),'databaseURL':_0x28577e(0x194),'projectId':_0x28577e(0x181),'storageBucket':_0x28577e(0x178),'messagingSenderId':'163687859817','appId':'1:163687859817:web:745ea384886f923b9604f8','measurementId':_0x28577e(0x17e)};function _0x4dc0(_0x339332,_0x2ffbb6){const _0x23b34b=_0x23b3();return _0x4dc0=function(_0x4dc0a0,_0x4550fc){_0x4dc0a0=_0x4dc0a0-0x177;let _0x542a2d=_0x23b34b[_0x4dc0a0];return _0x542a2d;},_0x4dc0(_0x339332,_0x2ffbb6);}firebase[_0x28577e(0x17f)](firebaseConfig);const db=firebase[_0x28577e(0x17a)](),messagesRef=db[_0x28577e(0x182)](_0x28577e(0x184));function _0x23b3(){const _0x5a6be7=['messages','5895496kaVBtc','click','11tdiQww','https://fordbchat-default-rtdb.firebaseio.com','545748GVWwcr','val','59052580kbEiHH','AIzaSyBpUHpE21fYlx8QpEE-vL8buRNldrilCUg','addEventListener','fordbchat.firebasestorage.app','createElement','database','sendButton','getElementById','appendChild','G-496K19JRJV','initializeApp','textContent','fordbchat','ref','30nKzcut','mensagens','9vbUzTz','1825077hNXkVq','2rbhfBI','11636149zHfStr','div','fordbchat.firebaseapp.com','texto','child_added','value','2052822JgQdkL','989756ZIGDOr'];_0x23b3=function(){return _0x5a6be7;};return _0x23b3();}document[_0x28577e(0x17c)](_0x28577e(0x17b))[_0x28577e(0x177)](_0x28577e(0x192),()=>{const _0x116f62=_0x28577e,_0xe981f8=document[_0x116f62(0x17c)]('messageInput'),_0x412720=_0xe981f8[_0x116f62(0x18d)]['trim']();_0x412720!==''&&(messagesRef['push']({'texto':_0x412720}),_0xe981f8[_0x116f62(0x18d)]='');}),messagesRef['on'](_0x28577e(0x18c),_0x4ccc67=>{const _0x495cb3=_0x28577e,_0x2fa8cc=_0x4ccc67[_0x495cb3(0x196)](),_0x294c3a=document[_0x495cb3(0x179)](_0x495cb3(0x189));_0x294c3a[_0x495cb3(0x180)]=_0x2fa8cc[_0x495cb3(0x18b)],document[_0x495cb3(0x17c)](_0x495cb3(0x190))[_0x495cb3(0x17d)](_0x294c3a);});
+// 🔥 Config Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyBpUHpE21fYlx8QpEE-vL8buRNldrilCUg",
+    authDomain: "fordbchat.firebaseapp.com",
+    databaseURL: "https://fordbchat-default-rtdb.firebaseio.com",
+    projectId: "fordbchat",
+    storageBucket: "fordbchat.firebasestorage.app",
+    messagingSenderId: "163687859817",
+    appId: "1:163687859817:web:745ea384886f923b9604f8",
+    measurementId: "G-496K19JRJV"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const messagesRef = db.ref("mensagens");
+  
+  // 📨 Enviar mensagem
+  document.getElementById("sendButton").addEventListener("click", () => {
+    const input = document.getElementById("messageInput");
+    const texto = input.value.trim();
+    if (texto !== "") {
+      messagesRef.push({ texto });
+      input.value = "";
+    }
+  });
+  
+  // 💬 Receber mensagens em tempo real
+  messagesRef.on("child_added", snapshot => {
+    const msg = snapshot.val();
+    const div = document.createElement("div");
+    div.textContent = msg.texto;
+    document.getElementById("messages").appendChild(div);
+  });
+  
