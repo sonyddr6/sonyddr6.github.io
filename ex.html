@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💬 Mini Chat Firebase</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f4f4f4;
+      transition: background 0.3s ease;
+    }
+
+    .dark {
+      background: #121212;
+      color: white;
+    }
+
+    #chat-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ccc;
+      width: 90%;
+      max-width: 400px;
+      transition: background 0.3s ease;
+    }
+
+    .dark #chat-container {
+      background: #1e1e1e;
+    }
+
+    #messages {
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background: #fafafa;
+      border-radius: 6px;
+    }
+
+    .dark #messages {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .dark input {
+      background: #333;
+      color: white;
+    }
+
+    .dark button {
+      background-color: #444;
+      color: white;
+    }
+
+    .dark button:hover {
+      background-color: #666;
+    }
+
+    #toggleDark {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h1>💬 Mini Chat</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Digite sua mensagem..." />
+    <button id="sendButton">Enviar</button>
+    <button id="toggleDark">🌙/☀️</button>
+  </div>
+
+  <!-- Firebase compat (browser-friendly) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <script>
+    // 🧠 Configuração do Firebase
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBpUHpE21fYlx8QpEE-vL8buRNldrilCUg",
+  authDomain: "fordbchat.firebaseapp.com",
+  databaseURL: "https://fordbchat-default-rtdb.firebaseio.com",
+  projectId: "fordbchat",
+  storageBucket: "fordbchat.firebasestorage.app",
+  messagingSenderId: "163687859817",
+  appId: "1:163687859817:web:745ea384886f923b9604f8",
+  measurementId: "G-496K19JRJV"
+};
+
+    // 🔥 Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const messagesRef = db.ref("mensagens");
+
+    const messagesDiv = document.getElementById("messages");
+    const input = document.getElementById("messageInput");
+
+    // ✉️ Envia mensagem
+    function enviarMensagem() {
+      const text = input.value.trim();
+      if (text !== "") {
+        messagesRef.push({
+          texto: text,
+          timestamp: Date.now()
+        });
+        input.value = "";
+      }
+    }
+
+    document.getElementById("sendButton").addEventListener("click", enviarMensagem);
+
+    // Enter também envia
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        enviarMensagem();
+      }
+    });
+
+    // 🔁 Recebe mensagens
+    messagesRef.on("child_added", (snapshot) => {
+      const msg = snapshot.val();
+      const div = document.createElement("div");
+      const hora = new Date(msg.timestamp).toLocaleTimeString();
+      div.textContent = `${msg.texto} (${hora})`;
+      messagesDiv.appendChild(div);
+
+      // Scroll para o final
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    // 🌙 Toggle Dark Mode
+    document.getElementById("toggleDark").addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+    });
+  </script>
+</body>
+</html>
