@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testar Modelos Gemini (via SDK)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-6">
+  <div class="max-w-xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-xl font-bold mb-4">Testar Modelos via SDK Gemini</h1>
+
+    <div class="mb-4">
+      <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1">API Key:</label>
+      <input type="text" id="api-key" placeholder="Coloque sua chave API aqui" 
+             class="w-full px-3 py-2 border rounded-md focus:ring focus:ring-indigo-300" />
+    </div>
+
+    <button onclick="testarModelos()" 
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-semibold transition">
+      Testar Modelos Disponíveis
+    </button>
+
+    <div class="mt-6">
+      <label for="model-select" class="block text-sm font-medium text-gray-700 mb-1">Modelos Disponíveis:</label>
+      <select id="model-select" class="w-full px-3 py-2 border rounded-md text-sm">
+        <option value="">Nenhum modelo testado ainda</option>
+      </select>
+    </div>
+
+    <!-- ✅ Área onde vamos listar os modelos disponíveis diretamente na página -->
+    <div id="model-list" class="mt-4 text-sm text-gray-800 bg-indigo-50 border border-indigo-200 p-3 rounded-md hidden"></div>
+
+    <div id="logOutput" class="mt-6 whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-3 rounded-md border"></div>
+  </div>
+
+  <script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+    const knownModels = [
+      { id: "gemini-1.5-flash-latest", name: "Gemini 1.5 Flash" },
+      { id: "gemini-1.5-pro-latest", name: "Gemini 1.5 Pro" },
+      { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash-Lite" },
+      { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
+      { id: "gemini-2.5-pro-exp-03-25", name: "Gemini 2.5 Pro Experimental" }
+    ];
+
+    async function testarModelos() {
+      const apiKey = document.getElementById('api-key').value.trim();
+      const output = document.getElementById("logOutput");
+      const select = document.getElementById("model-select");
+      const modelList = document.getElementById("model-list");
+      output.textContent = "Testando modelos via SDK Gemini...\n";
+      modelList.classList.add("hidden");
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const availableModels = [];
+
+      for (const model of knownModels) {
+        try {
+          const testModel = genAI.getGenerativeModel({ model: model.id });
+          await testModel.generateContent("teste");
+          availableModels.push(model);
+          output.textContent += `✅ ${model.name} está disponível\n`;
+        } catch (err) {
+          output.textContent += `❌ ${model.name} falhou: ${err.message}\n`;
+        }
+      }
+
+      select.innerHTML = '';
+      if (availableModels.length === 0) {
+        select.innerHTML = `<option value="">Nenhum modelo disponível</option>`;
+        modelList.classList.add("hidden");
+      } else {
+        for (const model of availableModels) {
+          const option = document.createElement("option");
+          option.value = model.id;
+          option.textContent = model.name;
+          select.appendChild(option);
+        }
+
+        // ✅ Exibe a lista dentro da página
+        modelList.innerHTML = `<strong>Modelos disponíveis:</strong><ul class="list-disc ml-5 mt-2">${availableModels
+          .map((m) => `<li>${m.name} <code class="text-xs text-gray-500">(${m.id})</code></li>`)
+          .join("")}</ul>`;
+        modelList.classList.remove("hidden");
+      }
+    }
+
+    window.testarModelos = testarModelos;
+  </script>
+</body>
+</html>
