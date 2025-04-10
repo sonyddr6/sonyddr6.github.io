@@ -51,6 +51,21 @@
       overflow-y: auto;
     }
 
+    .open-btn {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    .open-btn:hover {
+      background-color: #45a049;
+    }
+
     .terminal {
       background: #1e1e1e;
       border: 1px solid #333;
@@ -91,9 +106,14 @@
     </ul>
   </div>
   <div class="main">
+    <button class="open-btn" onclick="window.open('https://9000-idx-googlepythontest-1744324974220.cluster-etsqrqvqyvd4erxx7qq32imrjk.cloudworkstations.dev/', '_blank')">
+      Abrir Cloud Workstations 🚀
+    </button>
+
     <div class="terminal" id="terminal">
       <div>> Bem-vindo ao terminal interativo!</div>
     </div>
+
     <div class="input-line">
       <span class="prompt">$</span>
       <input type="text" id="cmdInput" placeholder="Digite um comando...">
