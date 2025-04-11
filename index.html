@@ -6,21 +6,33 @@
   <title>Chat com Gemini</title>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: 'Fira Code', monospace;
-      background-color: #1e1e1e;
-      color: #d4d4d4;
-      display: flex;
-      height: 100vh;
       overflow: hidden;
+      background: black;
+      color: #d4d4d4;
+    }
+
+    canvas#matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100vw;
+      height: 100vh;
     }
 
     .sidebar {
+      position: relative;
+      z-index: 1;
       width: 200px;
-      background-color: #252526;
+      background-color: rgba(37, 37, 38, 0.9);
       padding: 1rem;
       border-right: 1px solid #333;
+      height: 100vh;
     }
 
     .sidebar h2 {
@@ -45,12 +57,15 @@
     }
 
     .main {
+      position: relative;
+      z-index: 1;
       flex: 1;
       padding: 1rem;
-      background-color: #1e1e1e;
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background-color: rgba(30, 30, 30, 0.85);
     }
 
     .open-btn {
@@ -70,7 +85,7 @@
     }
 
     .terminal {
-      background: #1e1e1e;
+      background: rgba(30, 30, 30, 0.85);
       border: 1px solid #333;
       padding: 1rem;
       border-radius: 5px;
@@ -100,73 +115,107 @@
       flex: 1;
     }
 
-    .user {
-      color: #9cdcfe;
-    }
+    .user { color: #9cdcfe; }
+    .bot  { color: #ce9178; }
 
-    .bot {
-      color: #ce9178;
+    body {
+      display: flex;
+      flex-direction: row;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <h2>Menu</h2>
-    <ul>
-      <li>Chat</li>
-      <li><a href="/log/{{ sess_id }}" style="text-decoration:none; color:inherit;">Histórico</a></li>
-      <li>Config</li>
-    </ul>
+<canvas id="matrix"></canvas>
+
+<div class="sidebar">
+  <h2>Menu</h2>
+  <ul>
+    <li>Chat</li>
+    <li><a href="/log/{{ sess_id }}" style="text-decoration:none; color:inherit;">Histórico</a></li>
+    <li>Config</li>
+  </ul>
+</div>
+
+<div class="main">
+  <button class="open-btn" onclick="window.open('https://9000-idx-telegramas-gemini-1744341875765.cluster-uf6urqn4lned4spwk4xorq6bpo.cloudworkstations.dev/', '_blank')">
+    Abrir Cloud Workstations 🚀
+  </button>
+
+  <div class="terminal" id="mensagens">
+    > Bem-vindo ao chat com Gemini!
   </div>
 
-  <div class="main">
-    <button class="open-btn" onclick="window.open('https://9000-idx-googlepythontest-1744324974220.cluster-etsqrqvqyvd4erxx7qq32imrjk.cloudworkstations.dev/', '_blank')">
-      Abrir Cloud Workstations 🚀
-    </button>
-
-    <div class="terminal" id="mensagens">
-      > Bem-vindo ao chat com Gemini!
-    </div>
-
-    <div class="input-line">
-      <span class="prompt">$</span>
-      <input type="text" id="entrada" placeholder="Digite sua mensagem..." />
-    </div>
+  <div class="input-line">
+    <span class="prompt">$</span>
+    <input type="text" id="entrada" placeholder="Digite sua mensagem..." />
   </div>
+</div>
 
-  <script>
-    const entrada = document.getElementById("entrada");
-    const mensagens = document.getElementById("mensagens");
+<script>
+  const entrada = document.getElementById("entrada");
+  const mensagens = document.getElementById("mensagens");
 
-    async function enviar() {
-      const pergunta = entrada.value.trim();
-      if (!pergunta) return;
-      mensagens.innerHTML += `<div class="prompt user">$ ${pergunta}</div>`;
-      entrada.value = "";
-      entrada.disabled = true;
+  async function enviar() {
+    const pergunta = entrada.value.trim();
+    if (!pergunta) return;
+    mensagens.innerHTML += `<div class="prompt user">$ ${pergunta}</div>`;
+    entrada.value = "";
+    entrada.disabled = true;
 
-      try {
-        const resp = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mensagem: pergunta })
-        });
-        const json = await resp.json();
-        mensagens.innerHTML += `<div class="bot">🤖 Gemini > ${json.resposta}</div>`;
-      } catch (e) {
-        mensagens.innerHTML += `<div class="bot">❌ Erro ao conectar com a IA.</div>`;
-      }
-
-      mensagens.scrollTop = mensagens.scrollHeight;
-      entrada.disabled = false;
-      entrada.focus();
+    try {
+      const resp = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: pergunta })
+      });
+      const json = await resp.json();
+      mensagens.innerHTML += `<div class="bot">🤖 Gemini > ${json.resposta}</div>`;
+    } catch (e) {
+      mensagens.innerHTML += `<div class="bot">❌ Erro ao conectar com a IA.</div>`;
     }
 
-    entrada.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") enviar();
-    });
-  </script>
+    mensagens.scrollTop = mensagens.scrollHeight;
+    entrada.disabled = false;
+    entrada.focus();
+  }
+
+  entrada.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") enviar();
+  });
+
+  // MATRIX ANIMATION
+  const canvas = document.getElementById("matrix");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const letters = "アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const fontSize = 14;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#00ff00";
+    ctx.font = fontSize + "px Fira Code";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      drops[i] = (drops[i] * fontSize > canvas.height || Math.random() > 0.975) ? 0 : drops[i] + 1;
+    }
+  }
+
+  setInterval(drawMatrix, 50);
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+</script>
 
 </body>
 </html>
